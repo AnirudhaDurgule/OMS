@@ -1,0 +1,3376 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="left-side">
+            <div class="multilegTable">
+                <table class="table-custom-add-strategy table-responsive-lg table-striped card-table">
+                    <thead style="color: white; background-color: #666464;">
+                        <tr>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>Action</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>CPCode</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>Portfolio</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>Name</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>Strategy Name</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>BuyQty</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>BuyPrice</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>SellPrice</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>SellQty</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>Lot Size</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>NetQty</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>NetShares</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>BuyShares</center></th>
+                            <th style="box-sizing: border-box; border: 1px solid black;"><center>SellShares</center></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if userStrategy %}
+                            {% for key, strategyData in userStrategy.items %}
+                            <tr style="cursor: pointer; border-bottom: 2px solid grey; font-weight: bold; font-size: 20px;" onclick="toggleRows('{{ key }}', this)">
+                                    <td id="toggleButton-{{ key }}" aria-expanded="false">▼</td>
+                                    <td colspan="13">
+                                        <div class="background-color: #444;">
+                                            <span style="font-weight: 650; font-size: 14px; background-color: #444;">
+                                                StrategyType: {{ strategyData.0.strategy_code }} | 
+                                                Symbol: {{ strategyData.0.underlying }} |
+                                                ClientCode: {{ strategyData.0.client_id }} |
+                                                Portfolio: {{ strategyData.0.portfolio }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="data-row {{ key }}" style="display: none;">
+                                    <td colspan="1">
+                                        <table class="table-striped multilegTable"> <!-- Add the class here if needed -->
+                                            <tbody>
+                                                {% for rowData in strategyData %}
+                                                    <tr class="styled-row">
+                                                        <td><i class="fas fa-trash-alt" style="height: 10px; width: 14px;"></i></td>
+                                                        <td>{{ rowData.client_id }}</td>
+                                                        <td>{{ rowData.portfolio }}</td>
+                                                        <td><a href="#">{{ rowData.underlying }}</a></td>
+                                                        <td>{{ rowData.strategy_name }}</td>
+                                                        <td>0</td>
+                                                        <td>0</td>
+                                                        <td>0</td>
+                                                        <td>0</td>
+                                                        <td>0</td>
+                                                        <td>0</td>
+                                                        <td>0</td>
+                                                        <td>0</td>
+                                                        <td>0</td>
+                                                        <td>0</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="14">No data available</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Buy Modal -->
+        <div id="buyModalnew" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeBuyModalBtn">&times;</span>
+                <h2 id="buyModalTitle">Buy Order Entry</h2>
+                
+                <table class="buy-table-custom">
+                    <thead>
+                        <tr>
+                            <th><center>Price</center></th>
+                            <th><center>QTY</center></th>
+                            <th><center>Bidding Mode</center></th>
+                            <th><center>Quantity Per Cycle</center></th>
+                            <!-- <th><center>Jump</center></th>
+                            <th><center>Step</center></th>
+                            <th><center>Jump QTY</center></th> -->
+                            <th><center>Submit</center></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input
+                                    name="newBuyPrice"
+                                    type="number"
+                                    id="newBuyPriceInput"
+                                    class="buy-table-input"
+                                    placeholder="Enter price"
+                                    required
+                                />
+                                <p id="buyError" style="color: red; display: none;"></p>
+                            </td>
+                            <td>
+                                <input
+                                    name="QTY"
+                                    type="number"
+                                    id="buyqtyInput"
+                                    class="buy-table-input"
+                                    min="1"
+                                />
+                                <br /><br />
+                                <input
+                                    type="number"
+                                    id="lotSizeInput"
+                                    class="buy-table-input"
+                                    min="25"
+                                    readOnly
+                                />
+                                <p id="qtyError" style="color: red; display: none;"></p>
+                            </td>
+                            <td>
+                                <select name="biddingMode" id="biddingModeSelect">
+                                    <option value="Aggressive">Aggressive</option>
+                                    <option value="Normal">Normal</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input
+                                    name="qtyPerCycle"
+                                    type="number"
+                                    id="buyqtyPerCycleInput"
+                                    class="buy-table-input"
+                                    min="0"
+                                />
+                                <p id="buyQTYError" style="color: red; display: none;"></p>
+                            </td>
+                            <!-- <td>
+                                <input
+                                    name="jump"
+                                    type="checkbox"
+                                    id="jumpCheckbox"
+                                />
+                            </td>
+                            <td>
+                                <input
+                                    name="step"
+                                    type="number"
+                                    id="stepInput"
+                                    class="buy-table-input"
+                                />
+                                <p id="stepError" style="color: red; display: none;"></p>
+                            </td>
+                            <td>
+                                <input
+                                    name="jumpQty"
+                                    type="number"
+                                    id="jumpQtyInput"
+                                    class="buy-table-input"
+                                />
+                                <p id="jumpQtyError" style="color: red; display: none;"></p>
+                            </td> -->
+                            <td>
+                                <button id="placeButton" class="place-button" onclick="buyHandleClick()">PLACE</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+<!-- Sell Modal -->
+<div id="sellModalnew" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeSellModalBtn">&times;</span>
+        <h2 id="sellModalTitle">Sell Order Entry</h2>
+                
+        <table class="sell-table-custom">
+            <thead>
+                <tr>
+                    <th><center>Price</center></th>
+                    <th><center>QTY</center></th>
+                    <th><center>Bidding Mode</center></th>
+                    <th><center>Quantity Per Cycle</center></th>
+                    <!-- <th><center>Jump</center></th>
+                    <th><center>Step</center></th>
+                    <th><center>Jump QTY</center></th> -->
+                    <th><center>Submit</center></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <input
+                            name="newSellPrice"
+                            type="number"
+                            id="newSellPriceInput"
+                            class="sell-table-input"
+                            placeholder="Enter price"
+                            required
+                        />
+                        <p id="sellError" style="color: red; display: none;"></p>
+                    </td>
+                    <td>
+                        <input
+                            name="QTY"
+                            type="number"
+                            id="sellqtyInput"
+                            class="sell-table-input"
+                            min="1"
+                        />
+                        <br /><br />
+                        <input
+                            type="number"
+                            id="sellLotSizeInput"
+                            class="sell-table-input"
+                            min="25"
+                            readOnly
+                        />
+                        <p id="qtyError" style="color: red; display: none;"></p>
+                    </td>
+                    <td>
+                        <select name="biddingMode" id="biddingModeSelect">
+                            <option value="Aggressive">Aggressive</option>
+                            <option value="Normal">Normal</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input
+                            name="qtyPerCycle"
+                            type="number"
+                            id="sellqtyPerCycleInput"
+                            class="sell-table-input"
+                            min="0"
+                        />
+                        <p id="sellQTYError" style="color: red; display: none;"></p>
+                    </td>
+                    <!-- <td>
+                        <input
+                            name="jump"
+                            type="checkbox"
+                            id="jumpCheckbox"
+                        />
+                    </td>
+                    <td>
+                        <input
+                            name="step"
+                            type="number"
+                            id="stepInput"
+                            class="sell-table-input"
+                        />
+                        <p id="stepError" style="color: red; display: none;"></p>
+                    </td>
+                    <td>
+                        <input
+                            name="jumpQty"
+                            type="number"
+                            id="jumpQtyInput"
+                            class="sell-table-input"
+                        />
+                        <p id="jumpQtyError" style="color: red; display: none;"></p>
+                    </td> -->
+                    <td>
+                        <button id="placeButton" class="place-button" onclick="sellHandleClick()">PLACE</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+        </div>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <div class="right-side">
+            <div class="watchlist-container">
+                <div class="watchlist-header">Watchlist</div>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text border-0 px-1" id="basic-addon2">
+                        <i class="fas fa-search fa-lg" style="color: #939597;"></i>
+                    </span>
+                    <input type="text" id="search-input" class="form-control form-control-lg rounded"
+                           style="width: 100%; max-width: 325px;"
+                           placeholder="Search eg: infy bse, nifty fut weekly 2 3/50"
+                           aria-label="Search" aria-describedby="basic-addon2" />
+                </div>
+                            <div class="table-container">
+                                <table id="stock-table">
+                                    <thead>
+                                        <tr>
+                                            <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ticker</th>
+                                            <th>&nbsp;&nbsp;Change</th>
+                                            <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LTP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stock in stock_data %}
+                                        <tr id="stock-row-{{ stock.tokenID }}">
+                                            <td style="font-weight: bold; background-color: black; color: white;">{{ stock.ticker_code }} <span style="font-size: 0.8em; font-weight: bold; color: #7c7878;">{{ stock.exchange }}</span></td>
+                                            <td style="font-weight: bold; background-color: black; color: white;">{{ stock.percentChange }}%
+                                                <div class="action-buttons">
+                                                    <button class="B" onclick="openBuyModal('{{ stock.tokenID }}', '{{ stock.ticker_code }}', '{{ stock.percentChange }}', '{{ stock.ltp }}')">B</button>
+                                                    <button class="S" onclick="openSellModal('{{ stock.tokenID }}', '{{ stock.ticker_code }}', '{{ stock.percentChange }}', '{{ stock.ltp }}')">S</button>
+                                                    <button class="watchlist" onclick= "openMarketDepthModal()"><i class="fas fa-list"></i></button>
+                                                    <button class="attachment" onclick="openAddStrategyModal()"><i class="fas fa-paperclip"></i></button>
+                                                    <button class="delete"><i class="fas fa-trash"></i></button>
+                                                </div>s
+                                            </td>
+                                            <td style="font-weight: bold; background-color: black; color: white;">{{ stock.ltp }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="addStrategyModal" class="modal add-strategy-modal">
+                    <div class="modal-content-adds">
+                      <div class="modal-header">
+                        <p class="modal-title">Add Strategy</p>
+                        <div class="header-right" onclick="closeModal('addStrategyModal')" style="font-weight: bold; cursor: pointer;">&#215;</div>
+                      </div>
+                      <div class="modal-body">
+                        <div class="form-group">
+                          <div class="form-row">
+                            <div class="form-field">
+                              <label for="watchlist_client_id">Client ID:</label>
+                              <select id="watchlist_client_id">
+                                <option value="default">Choose client</option>
+                                <option value="CP1">CP1</option>
+                                <option value="CP2">CP2</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="portfolio_name">Portfolio Name:</label>
+                              <input id="portfolio_name" type="text" placeholder="Portfolio Name" required>
+                            </div>
+                            <div class="form-field">
+                              <label for="strategy_type">Strategy Type:</label>
+                              <select id="strategy_type">
+                                <option value="default">Choose Strategy Type</option>
+                                <option value="STRADDLE">STRADDLE</option>
+                                <option value="STRANGLE">STRANGLE</option>
+                                <option value="ICNDBID">ICNDBID</option>
+                                <option value="BUTTERFLYBID">BUTTERFLYBID</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="strategy_mode">Strategy Mode:</label>
+                              <select id="strategy_mode">
+                                <option value="default">Strategy Mode</option>
+                                <option value="IOC">IOC</option>
+                                <option value="BID">BID</option>
+                              </select>
+                            </div>
+                          </div>
+                  
+                          <div class="leg-row">
+                            <div class="form-field">
+                              <label for="leg1">Leg 1:</label>
+                              <select id="leg1">
+                              <option value="default">Leg 1</option>
+                                <option value="LIMIT">LIMIT</option>
+                                <option value="MARKET">MARKET</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="leg2">Leg 2:</label>
+                              <select id="leg2">
+                              <option value="default">Leg 2</option>
+                                <option value="LIMIT">LIMIT</option>
+                                <option value="MARKET">MARKET</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="leg3">Leg 3:</label>
+                              <select id="leg3">
+                              <option value="default">Leg 3</option>
+                                <option value="LIMIT">LIMIT</option>
+                                <option value="MARKET">MARKET</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="leg4">Leg 4:</label>
+                              <select id="leg4">
+                              <option value="default">Leg 4</option>
+                                <option value="LIMIT">LIMIT</option>
+                                <option value="MARKET">MARKET</option>
+                              </select>
+                            </div>
+                          </div>
+                  
+                          <div class="options-row">
+                            <div class="form-field">
+                              <label for="opttype">OptType:</label>
+                              <select id="opttype">
+                                <option value="" disabled selected>Select OptType</option>
+                                <option value="CE">CE</option>
+                                <option value="PE">PE</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="symbol">Symbol:</label>
+                              <select id="symbol">
+                                <option value="" disabled selected>Select Symbol</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="expiry1">Expiry 1:</label>
+                              <select id="expiry1" disabled>
+                                <option value="" disabled selected>Select Expiry 1</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="expiry2">Expiry 2:</label>
+                              <select id="expiry2" disabled>
+                                <option value="" disabled selected>Select Expiry 2</option>
+                              </select>
+                            </div>
+                          </div>
+                  
+                          <div class="strike-row">
+                            <div class="form-field">
+                              <label for="strikeprice1">Strike Price 1:</label>
+                              <select id="strikeprice1" disabled>
+                                <option value="" disabled selected>Select Strike Price 1</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="strikeprice2">Strike Price 2:</label>
+                              <select id="strikeprice2" disabled>
+                                <option value="" disabled selected>Select Strike Price 2</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="strikeprice3">Strike Price 3:</label>
+                              <select id="strikeprice3" disabled>
+                                <option value="" disabled selected>Select Strike Price 3</option>
+                              </select>
+                            </div>
+                            <div class="form-field">
+                              <label for="strikeprice4">Strike Price 4:</label>
+                              <select id="strikeprice4" disabled>
+                                <option value="" disabled selected>Select Strike Price 4</option>
+                              </select>
+                            </div>
+                          </div>
+                  
+                          <div class="ratio-row">
+                            <div class="form-field">
+                              <label for="ratio1">Ratio 1:</label>
+                              <input id="ratio1" type="text" placeholder="1">
+                            </div>
+                            <div class="form-field">
+                              <label for="ratio2">Ratio 2:</label>
+                              <input id="ratio2" type="text" placeholder="1">
+                            </div>
+                            <div class="form-field">
+                              <label for="ratio3">Ratio 3:</label>
+                              <input id="ratio3" type="text" placeholder="1">
+                            </div>
+                          </div>
+                        </div>
+                  
+                        <!-- <button class="add-button" onclick="submitStrategy()">Add Strategy</button> -->
+                        <button class="add-button">Add Strategy</button>
+                      </div>
+                      <div class="modal-footer">
+                        <!-- Optional footer content can go here -->
+                      </div>
+                    </div>
+                  </div>
+                  
+                <div id="buyModal" class="modal">
+                    <div class="modal-content-bs">
+                        <div class="modal-header-buy">
+                            <div class="header-left">
+                                <span class="modal-title">BUY </span>
+                                <label class="modal-subtitle">
+                                    <input type="radio" name="duration" checked>
+                                    NSE:218.85
+                                </label>
+                            </div>
+                            <div class="header-right">
+                                <div class="switch">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-body">
+                            <div class="">
+                                <div class="tab-container">
+                                </div>
+            
+                                <div id="regular-content" class="tab-content active">
+                                    <div class="form-group radio-group">
+                                    </div>
+                                    <div class="form-inline">
+                                        <div class="form-group">
+                                            <label for="quantity">Qty</label>
+                                            <input type="number" id="quantity" value="5400">
+                                            <br /><br />
+                                        </div>
+            
+                                        <div class="form-group price-group">
+                                            <label for="price">Price</label>
+                                            <input type="number" id="price" value="218.85">
+                                            <div class="price-type">
+                                                <label>
+                                                    <input type="radio" name="priceType" value="market" checked> Market
+                                                </label>
+                                                <label>
+                                                    <input type="radio" name="priceType" value="limit"> Limit
+                                                </label>
+                                            </div>
+                                            <!-- <div class="price-type">
+                                                <label>
+                                                    <input type="radio" name="priceType" checked> Market
+                                                </label>
+                                                <label>
+                                                    <input type="radio" name="priceType"> Limit
+                                                </label>
+                                            </div> -->
+                                        </div>
+            
+                                        <div class="form-group">
+                                            <label for="triggerPrice">Trigger Price</label>
+                                            <input type="number" id="triggerPrice" value="0">
+                                            <div class="price-type">
+                                                <label><input type="radio" name="slType" checked> SL</label>
+                                            </div>
+                                            <div class="price-type">
+                                                <label><input type="radio" name="slType" checked> IOC</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="footer">
+                                <div class="margin-info">
+                                </div>
+                                <div>
+                                    <button type="submit" class="buy-button" onclick="submitOrder('buyModal')">Proceed</button>
+                                    <button class="cancel-button" onclick="closeModal('buyModal')">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                </div>
+                </div>
+                <div id="sellModal" class="modal">
+                    <div class="modal-content-bs">
+                        <div class="modal-header-sell">
+                            <div class="header-left">
+                                <span class="modal-title">SELL ABCAPITAL</span>
+                                <label class="modal-subtitle-sell">
+                                    <input type="radio" name="duration" checked>
+                                    NSE:218.85
+                                </label>
+                            </div>
+                            <div class="header-right">
+                                <div class="switch">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-body">
+                            <div class="">
+                                <div class="tab-container">
+                                </div>
+            
+                                <div id="regular-sell-content" class="tab-content active">
+                                    <div class="form-group radio-group">
+                                    </div>
+                                    <div class="form-inline">
+                                        <div class="form-group">
+                                            <label for="quantity">Qty</label>
+                                            <input type="number" id="sell-quantity" value="5400">
+                                            <br /><br />
+                                        </div>
+            
+                                        <div class="form-group price-group">
+                                            <label for="price">Price</label>
+                                            <input type="number" id="sell-price" value="218.85">
+                                            <div class="price-type">
+                                                <label>
+                                                    <input type="radio" name="priceType" checked> Market
+                                                </label>
+                                                <label>
+                                                    <input type="radio" name="priceType"> Limit
+                                                </label>
+                                            </div>
+                                        </div>
+            
+                                        <div class="form-group">
+                                            <label for="triggerPrice">Trigger Price</label>
+                                            <input type="number" id="triggerPrice" value="0">
+                                            <div class="price-type">
+                                                <label><input type="radio" name="slType" checked> SL</label>
+                                            </div>
+                                            <div class="price-type">
+                                                <label><input type="radio" name="slType" checked> IOC</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="footer">
+                                <div class="margin-info">
+                                </div>
+            
+                                <div>
+                                    <button type="submit" class="buy-button" onclick="submitOrder('sellModal', false)">Proceed</button>
+                                    <button class="cancel-button" onclick="closeModal('sellModal')">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                </div>
+                </div>
+                <div id="marketdepth" class="modal">
+                    <div class="modal-content-bs">
+                        <div class="modal-header-mktdepth">
+                            <div class="header-left">
+                                <span class="modal-title">Market Depth</span>
+                            </div>
+                            <div class="header-right" onclick="closeModal('marketdepth')" style="font-weight: bold; cursor: pointer;">&#215;</div>
+                        </div>
+                
+                        <div class="modal-body">
+                            <br/><br/>
+                            <table class="market-depth-table">
+                                <thead>
+                                    <tr>
+                                        <th>BID Rate</th>
+                                        <th>No. of ORDERS</th>
+                                        <th>QUANTITY</th>
+                                        <th>OFFERS</th>
+                                        <th>No. of ORDERS</th>
+                                        <th>QUANTITY</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>24727.5</td>
+                                        <td>1</td>
+                                        <td>25</td>
+                                        <td class="red-text">24729.85</td>
+                                        <td>1</td>
+                                        <td class="red-text">25</td>
+                                    </tr>
+                                    <tr>
+                                        <td>24727.1</td>
+                                        <td>1</td>
+                                        <td>50</td>
+                                        <td class="red-text">24730</td>
+                                        <td>1</td>
+                                        <td class="red-text">25</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-close-btn" onclick="closeModal('marketdepth')">Close</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="watchlistModal" class="modal">
+                    <div class="modal-content-adds">
+                      <div class="modal-header">
+                        <p class="modal-title">Add Watchlist</p>
+                        <div class="header-right" onclick="closeModal('watchlistModal')" style="font-weight: bold; cursor: pointer;">&#215;</div>
+                      </div>
+                      <div class="modal-body">
+                        <div class="form-group">
+                          <div class="form-field">
+                            <label for="client_id">Client ID:</label>
+                            <input id="client_id" name="client_id" type="text" placeholder="Client ID">
+                            <p class="error-message" id="client_id_error"></p>
+                          </div>
+                          <div class="form-field">
+                            <label for="security_name">Security Name:</label>
+                            <input id="security_name" name="security_name" type="text" placeholder="Security Name">
+                            <p class="error-message" id="security_name_error"></p>
+                          </div>
+                          <div class="form-field">
+                            <label for="segment">Segment:</label>
+                            <input id="segment" name="segment" type="text" placeholder="Segment">
+                            <p class="error-message" id="segment_error"></p>
+                          </div>
+                          <div class="form-field">
+                            <label for="token">Token:</label>
+                            <input id="token" name="token" type="text" placeholder="Token">
+                            <p class="error-message" id="token_error"></p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button class="submit-button" onclick="addWatchlist()">Add Watchlist</button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  
+                <div class="floating-buttons">
+                    <button id="watchlistBtn">Watchlist</button>
+                    <button id="clientPositionBtn">Client Position</button>
+                    <!-- <button id="goToStrategyList">Go to Strategy List</button> -->
+                    
+                </div>
+
+                <div id="toast-container" class="toast-container"></div>
+                <div id="clientPositionModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <span class="modal-title">Client Position</span>
+                            <span class="close">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div class="tab-container">
+                                <div class="tab active" data-tab="trade-book" onclick="fetchTradeBook()">Trade Book</div>
+                                <div class="tab" data-tab="order-book" onclick="fetchOrderBook()">Order Book</div>
+                                <div class="tab" data-tab="position" onclick="fetchNetPosition()">Position</div>
+                                <div class="tab" data-tab="strategy-position" onclick="fetchStrategyNetPosition()">Strategy Position</div>
+                            </div>
+                            <div id="trade-book-content" class="tab-content active"> 
+                                <label>INSTRUMENT</label>
+                                <input id="instrument-trade-input" placeholder="Search INSTRUMENT...">
+                                &nbsp;&nbsp;
+                                <label>Exchange</label>
+                                <input id="exchange-trade-input" placeholder="ALL">
+                                &nbsp;&nbsp;
+                                <label>Segment</label>
+                                <input id="segment-trade-input" placeholder="ALL">
+                                &nbsp;&nbsp;
+                                <label>Order Status</label>
+                                <input id="status-trade-input" placeholder="ALL">
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <button onclick="refreshTradeBook()">Refresh</button>
+                                <br/><br/>
+                                <table class="orderbook-table">
+                                    <thead class="orderbook-table">
+                                        <tr class="orderbook-table">
+                                            <th class="orderbook-table">Algo ID</th>
+                                            <th class="orderbook-table">INSTRUMENT</th>
+                                            <th class="orderbook-table">SIDE</th>
+                                            <th class="orderbook-table">QTY/FILLED/PENDING</th>
+                                            <th class="orderbook-table">ORDER PRICE</th>
+                                            <!-- <th class="orderbook-table">ORDER QUANTITY</th> -->
+                                             <th class="orderbook-table">Exchange Order IDs</th>
+                                            <th class="orderbook-table">ORDER STATUS</th>
+                                            <!-- <th class="orderbook-table">LIMIT PRICE</th>
+                                            <th class="orderbook-table">TRIGGER PRICE</th>
+                                            <th class="orderbook-table">ACTION</th> -->
+                                        </tr>
+                                    </thead>
+                                    <tbody id="trade-book-body">
+                                    </tbody>
+                                </table>
+                                <div class="custom-pagination">
+                                    <button onclick="goToPreviousTradeBookPage()">Previous</button>
+                                    <span id="trade-page-number">1</span>
+                                    <button onclick="goToNextTradeBookPage()">Next</button>
+                                </div><br>
+                                <button class="modal-close-btn" onclick="closeModal('clientPositionModal')">Close</button>
+                            </div>
+                        <div id="order-book-content" class="tab-content">
+                            <label>INSTRUMENT</label>
+                            <input id="instrument-input" placeholder="Search INSTRUMENT...">
+                            &nbsp;&nbsp;
+                            <label>Exchange</label>
+                            <input id="exchange-input" placeholder="ALL">
+                            &nbsp;&nbsp;
+                            <label>Segment</label>
+                            <input id="segment-input" placeholder="ALL">
+                            &nbsp;&nbsp;
+                            <label>Order Status</label>
+                            <input id="status-input" placeholder="ALL">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <button onclick="refreshTable()">Refresh</button>
+                            <button onclick="cancelAll()">Cancel All</button>
+                            <br/><br/>
+                            <table class="orderbook-table">
+                                <thead class="orderbook-table">
+                                    <tr class="orderbook-table">
+                                        <th class="orderbook-table">Algo ID</th>
+                                        <th class="orderbook-table">Exchange Segment</th>
+                                        <th class="orderbook-table">Instrument Name</th>
+                                        <th class="orderbook-table">Order Type</th>
+                                        <th class="orderbook-table">Order Quantity</th>
+                                        <th class="orderbook-table">Order Price</th>
+                                        <th class="orderbook-table">Order Stop Price</th>
+                                        <th class="orderbook-table">Leaves Quantity</th>
+                                        <th class="orderbook-table">Cumulative Quantity</th>
+                                        <th class="orderbook-table">Order Average Traded Price</th>
+                                        <th class="orderbook-table">App Order ID</th>
+                                        <th class="orderbook-table">Client ID</th>
+                                        <th class="orderbook-table">Exchange Order ID</th>
+                                        <th class="orderbook-table">Order Unique Identifier</th>
+                                        <th class="orderbook-table">Order Status</th>
+                                        <th class="orderbook-table">Reason</th>
+                                        <th class="orderbook-table">Exchange Instrument ID</th>
+                                        <th class="orderbook-table">Last Update DateTime</th>
+                                        <th class="orderbook-table">Order Side</th>
+                                        <th class="orderbook-table">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="order-book-body">
+                                </tbody>
+                            </table>
+                            <div class="custom-pagination">
+                                <button onclick="goToPreviousPage()">Previous</button>
+                                <span id="page-number">1</span>
+                                <button onclick="goToNextPage()">Next</button>
+                            </div><br/>
+                            <button class="modal-close-btn" onclick="closeModal('clientPositionModal')">Close</button>
+                        </div>
+                        <div id="position-content" class="tab-content">
+                            <input placeholder="Search INSTRUMENT...">
+                            <label>Realized MTM: 0.00</label>
+                            <label>Unrealized MTM: 0.00</label>
+                            <label>Total MTM: 0.00</label>
+                            <button>Refresh</button>
+                            <button>Square Off All</button>
+                            <br/><br/>
+                            <table class="orderbook-table">
+                                <thead class="orderbook-table">
+                                    <tr class="orderbook-table">
+                                        <th class="orderbook-table">Algo ID</th>
+                                        <th class="orderbook-table">INSTRUMENT</th>
+                                        <th class="orderbook-table">NET QUANTITY</th>
+                                        <th class="orderbook-table">NET VALUE</th>
+                                        <th class="orderbook-table">ACTION</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="net-position-body">
+                                    <!-- Rows will be dynamically inserted here -->
+                                </tbody>
+                            </table>
+                            <div id="pagination-controls">
+                                <button onclick="goToPreviousNetPositionPage()">Previous</button>
+                                <span id="net-position-page-number">1</span>
+                                <button onclick="goToNextNetPositionPage()">Next</button>
+                            </div><br/>
+                            <button class="modal-close-btn" onclick="closeModal('clientPositionModal')">Close</button>
+                        </div>
+                        <div id="strategy-position-content" class="tab-content">
+                            <input placeholder="Search INSTRUMENT...">
+                            <label>Realized MTM: 0.00</label>
+                            <label>Unrealized MTM: 0.00</label>
+                            <label>Total MTM: 0.00</label>
+                            <button>Refresh</button>
+                            <button>Square Off All</button>
+                            <br/><br/>
+                            <table class="orderbook-table">
+                                <thead class="orderbook-table">
+                                    <tr class="orderbook-table">
+                                        <th class="orderbook-table">INSTRUMENT</th>
+                                        <th class="orderbook-table">NET QUANTITY</th>
+                                        <th class="orderbook-table">NET VALUE</th>
+                                        <th class="orderbook-table">ACTION</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="strategy-position-body">
+                                    <!-- Rows will be dynamically inserted here -->
+                                </tbody>
+                            </table>
+                            <div id="strategy-pagination-controls">
+                                <button onclick="goToPreviousStrategyPositionPage()">Previous</button>
+                                <span id="strategy-position-page-number">1</span>
+                                <button onclick="goToNextStrategyPositionPage()">Next</button>
+                            </div><br/>
+                            <button class="modal-close-btn" onclick="closeModal('clientPositionModal')">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>         
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            function setupTabSwitching(modalId) {
+                const modal = document.getElementById(modalId);
+                const tabs = modal.querySelectorAll('.tab');
+                const tabContents = modal.querySelectorAll('.tab-content');
+        
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        tabs.forEach(t => t.classList.remove('active'));
+                        tabContents.forEach(tc => tc.classList.remove('active'));
+        
+                        tab.classList.add('active');
+                        const tabContentId = tab.getAttribute('data-tab') + '-content';
+                        const tabContent = modal.querySelector(`#${tabContentId}`);
+                        if (tabContent) {
+                            tabContent.classList.add('active');
+                        }
+                    });
+                });
+            }
+            setupTabSwitching('buyModal');
+            setupTabSwitching('sellModal');
+            setupTabSwitching('clientPositionModal');
+        
+            function openModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "block";
+                }
+            }
+        
+            function closeModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "none";
+                }
+            }
+        
+            window.openModal = openModal;
+            window.closeModal = closeModal;
+        
+            const clientPositionBtn = document.getElementById('clientPositionBtn');
+            const clientPositionModal = document.getElementById('clientPositionModal');
+            const closeBtn = clientPositionModal.querySelector('.close');
+        
+            clientPositionBtn.addEventListener('click', () => {
+                openModal('clientPositionModal');
+            });
+        
+            closeBtn.addEventListener('click', () => {
+                closeModal('clientPositionModal');
+            });
+        
+            window.addEventListener('click', (event) => {
+                if (event.target == clientPositionModal) {
+                    closeModal('clientPositionModal');
+                }
+            });
+        });
+        
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdown-menu');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        document.addEventListener('click', function (e) {
+            const dropdown = document.getElementById('dropdown-menu');
+            if (!e.target.closest('.profile-group')) {
+                dropdown.style.display = 'none';
+            }
+        });
+        </script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.2.0/mdb.min.js"></script>
+<script>
+    let currentStockData = [];
+    let previousStockData = {};
+
+    document.getElementById('search-input').addEventListener('input', debounce(function() {
+        let inputValue = this.value.toUpperCase();
+        this.value = inputValue;
+
+        if (isValidTicker(inputValue)) {
+            searchTicker(inputValue);
+        }
+    }, 1000)); // Debounce input for 300ms delay
+
+    function isValidTicker(ticker) {
+        return ticker.length >= 3;
+    }
+
+    function searchTicker(ticker) {
+        const apiUrl = 'https://neuronsoft.in/api/new_ticker_search/';
+        const requestData = { ticker: ticker };
+
+        // Clear only the relevant data for a fresh search
+        currentStockData.length = 0;  // Efficiently clear the array
+        previousStockData = {};  // Reset the object holding previous stock data
+
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            currentStockData = data.stockSearch;
+            displaySearchResults(currentStockData);
+
+            initializeWebSocket();  // Start WebSocket after receiving the data
+        })
+        .catch(error => console.error('Error fetching ticker data:', error));
+    }
+    
+        function displaySearchResults(results) {
+            const tableBody = document.querySelector('#stock-table tbody');
+            tableBody.innerHTML = '';
+    
+            results.forEach(stock => {
+                const row = document.createElement('tr');
+                row.id = `stock-row-${stock.tokenID}`;
+                row.innerHTML = `
+                    <td>${stock.ticker_code} <span style="font-size: 0.8em; font-weight: bold; color: #7c7878;">${stock.exchange}</span></td>
+                    <td>${stock.percentChange > 0 ? '+' : ''}${stock.percentChange}%
+                        <div class="action-buttons">
+                            <button class="B" onclick="openBuyModal('${stock.tokenID}', '${stock.ticker_code}', '${stock.percentChange}', '${stock.ltp}')">B</button>
+                            <button class="S" onclick="openSellModal('${stock.tokenID}', '${stock.ticker_code}', '${stock.percentChange}', '${stock.ltp}')">S</button>
+                            <button class="watchlist" onclick="openMarketDepthModal()"><i class="fas fa-list"></i></button>
+                            <button class="attachment" onclick="openAddStrategyModal()"><i class="fas fa-paperclip"></i></button>
+                            <button class="delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                <td class="ltp">${formatLTP(stock.ltp)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        function formatLTP(value) {
+        return parseFloat(value).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        // console.log("****", stock.tokenID);
+    }
+
+    function debounce(func, delay) {
+        let timeout;
+        return function () {
+            const context = this;
+            const args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
+    function initializeWebSocket() {
+        const wsUrl = 'wss://neuronsoft.in/ws/watchlist/abc/';
+        const socket = new WebSocket(wsUrl);
+
+        socket.addEventListener('open', function (event) {
+            console.log('Connected to WebSocket');
+            currentStockData.forEach(stock => {
+                const message = JSON.stringify({ event: "addTicker", token: stock.tokenID });
+                socket.send(message);
+            });
+        });
+
+        socket.addEventListener('message', function (event) {
+            // console.log('Message from server ', event.data);
+            handleWebSocketMessage(event.data);
+        });
+
+        socket.addEventListener('close', function (event) {
+            // console.log('WebSocket connection closed:', event);
+        });
+
+        socket.addEventListener('error', function (event) {
+            // console.error('WebSocket error:', event);
+        });
+    }
+
+    function handleWebSocketMessage(data) {
+        const parsedData = JSON.parse(data);
+        const tokenID = parsedData.tokenID;
+        const row = document.getElementById(`stock-row-${tokenID}`);
+        
+        if (row) {
+            const previousLTP = previousStockData[tokenID]?.LTP || parsedData.LTP;
+            const previousPercentageChange = previousStockData[tokenID]?.percentageChange || parsedData.percentageChange;
+            
+            // Update LTP
+            const ltpCell = row.querySelector('.ltp');
+            ltpCell.textContent = formatLTP(parsedData.LTP);
+            applyColorChange(ltpCell, parsedData.LTP, previousLTP);
+
+            const percentChangeCell = row.querySelector('td:nth-child(2)');
+            percentChangeCell.childNodes[0].textContent = `${parsedData.percentageChange > 0 ? '+' : ''}${parsedData.percentageChange}%`;
+            applyColorChange(percentChangeCell, parsedData.percentageChange, previousPercentageChange);
+
+            // Update previous stock data
+            previousStockData[tokenID] = {
+                LTP: parsedData.LTP,
+                percentageChange: parsedData.percentageChange
+            };
+        }
+    }
+
+    function applyColorChange(element, newValue, oldValue) {
+        const newWholeNumber = parseInt(newValue);
+        const oldWholeNumber = parseInt(oldValue);
+        const newDecimal = parseFloat(newValue).toFixed(2).split('.')[1];
+        const oldDecimal = parseFloat(oldValue).toFixed(2).split('.')[1];
+
+        // Check if the whole value (percentage change) has changed
+        if (newWholeNumber !== oldWholeNumber) {
+            element.style.color = newWholeNumber > oldWholeNumber ? 'green' : 'red';
+        } else if (newDecimal !== oldDecimal) {
+            element.style.color = newDecimal > oldDecimal ? 'green' : 'red';
+        }
+    }
+
+    // Initial search for 'NIFTY' when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        searchTicker('NIFTY');
+    });
+</script>
+    <script>
+        document.getElementById("watchlistBtn").addEventListener("click", function() {
+        document.getElementById("watchlistModal").style.display = "block";
+        });
+
+        function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+        }
+
+        function addWatchlist() {
+        const clientID = document.getElementById('Client_id').value;
+        const securityName = document.getElementById('security_name').value;
+        const segment = document.getElementById('segment').value;
+        const token = document.getElementById('token').value;
+
+        const source = "web";
+        const exchange = "NSE";
+        const action = "add";
+
+        const data = {
+            clientID: clientID,
+            source: source,
+            securityName: securityName,
+            segment: segment,
+            token: token,
+            exchange: exchange,
+            action: action
+        };
+
+        fetch('http://192.168.50.35:5000/api/watchlistAdd', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            'Cookie': 'sessionid=ulfl5bco42ko7hfph3b5ktkhhc8ceq5m'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            if (data.type === "success") {
+            showToast(data.desc, 'success');
+            } else {
+            showToast(data.desc, 'failure');
+            }
+            closeModal('watchlistModal');
+            updateWatchlistTable();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+        }
+                        
+        function showToast(message, type) {
+        const toastContainer = document.getElementById('toast-container');
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('show');
+            setTimeout(() => {
+            toast.classList.remove('show');
+            toastContainer.removeChild(toast);
+            }, 3000);
+        }, 100);
+        }
+</script>
+<script>
+    const lotSizes = {
+        "NIFTY": 25, "BANKNIFTY": 15, "FINNIFTY": 25, "MIDCPNIFTY": 50, "RELIANCE": 250, "TCS": 150, "INFY": 300, "HDFCBANK": 550, 
+        "HDFC": 300, "ITC": 3200, "ICICIBANK": 700, "KOTAKBANK": 400, "LT": 300, "SBIN": 1500, "AXISBANK": 1200, "MARUTI": 100, 
+        "TATASTEEL": 850, "TITAN": 375, "BHARTIARTL": 1851, "SUNPHARMA": 1100, "HINDUNILVR": 300, "ADANIPORTS": 1250, "ASIANPAINT": 300,
+        "ULTRACEMCO": 100, "BAJFINANCE": 125, "BAJAJFINSV": 75, "HEROMOTOCO": 300, "DRREDDY": 125, "GRASIM": 400, "JSWSTEEL": 1350, 
+        "M&M": 700, "POWERGRID": 3000, "WIPRO": 3200, "ONGC": 7700, "HCLTECH": 700, "COALINDIA": 4200, "TATAMOTORS": 5700, 
+        "NTPC": 5700, "DIVISLAB": 150, "CIPLA": 650, "HINDALCO": 2150, "TECHM": 600, "INDUSINDBK": 400, "VEDL": 3100, "BPCL": 1800,
+        "IOC": 6200, "SBILIFE": 650, "DABUR": 2000, "BRITANNIA": 200, "SHREECEM": 50, "BAJAJ-AUTO": 250, "EICHERMOT": 200, 
+        "AMBUJACEM": 2200, "ACC": 250, "PIDILITIND": 500, "MOTHERSON": 3500, "GAIL": 6100, "PNB": 10700, "TATACONSUM": 900, "UPL": 700, 
+        "NMDC": 6700, "ADANIENT": 500, "BANDHANBNK": 1800
+    };
+    
+    // Store WebSocket connection globally
+    let socketlot = null;
+    let isWebSocketConnected = false;
+    let selectedStockLtp = null;
+    let selectedTokenID = null;
+    
+    // Open WebSocket connection if it's not already open
+    function connectWebSocket() {
+        const wsUrl = "ws://192.168.50.35:5000/ws/OMS/CP01/web/";
+    
+        // Only connect if the WebSocket is not already open
+        if (!socketlot || socketlot.readyState === WebSocket.CLOSED) {
+            socketlot = new WebSocket(wsUrl);
+    
+            socketlot.onopen = function () {
+                console.log("WebSocket connected");
+            };
+    
+            socketlot.onmessage = function (event) {
+                console.log("WebSocket message received:", event.data);
+            };
+    
+            socketlot.onerror = function (error) {
+                console.log("WebSocket error:", error);
+            };
+    
+            socketlot.onclose = function () {
+                console.log("WebSocket closed");
+            };
+        } else {
+            console.log("WebSocket is already open");
+        }
+    }
+    
+    // Close WebSocket connection
+    function closeWebSocket() {
+        if (socketlot && socketlot.readyState !== WebSocket.CLOSED) {
+            socketlot.close();
+        }
+    }
+    
+    // Open Buy Modal
+    function openBuyModal(tokenID, tickerCode, percentChange, ltp) {
+        document.querySelector('#buyModal .modal-title').innerHTML = `BUY ${tickerCode}`;
+        document.getElementById('price').value = ltp;
+        document.querySelector('.modal-subtitle input[name="duration"]').nextSibling.textContent = `NSE: ${ltp}`;
+    
+        const baseTicker = extractBaseTicker(tickerCode);
+        const lotSize = lotSizes[baseTicker] || 1;
+        document.getElementById('quantity').value = lotSize;
+    
+        // Store LTP and tokenID for use in the WebSocket
+        selectedStockLtp = ltp;
+        selectedTokenID = tokenID;
+    
+        // Open the modal and connect the WebSocket
+        document.getElementById('buyModal').style.display = 'block';
+        connectWebSocket();
+    }
+    
+    // Open Sell Modal
+    function openSellModal(tokenID, tickerCode, percentChange, ltp) {
+        document.querySelector('#sellModal .modal-title').innerHTML = `SELL ${tickerCode}`;
+        document.getElementById('sell-price').value = ltp;
+        document.querySelector('.modal-subtitle-sell input[name="duration"]').nextSibling.textContent = `NSE: ${ltp}`;
+    
+        const baseTicker = extractBaseTicker(tickerCode);
+        const lotSize = lotSizes[baseTicker] || 1;
+        document.getElementById('sell-quantity').value = lotSize;
+    
+        // Store LTP and tokenID for use in the WebSocket
+        selectedStockLtp = ltp;
+        selectedTokenID = tokenID;
+    
+        // Open the modal and connect the WebSocket
+        document.getElementById('sellModal').style.display = 'block';
+        connectWebSocket();
+    }
+    
+    // Close modal function
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+        // closeWebSocket(); // Close WebSocket when modal is closed
+    }
+    
+    // Submit the Buy/Sell order
+    function submitOrder(modalId, isBuyOrder = true) {
+        const quantity = document.getElementById(isBuyOrder ? 'quantity' : 'sell-quantity').value;
+        const priceType = document.querySelector('input[name="priceType"]:checked').value;
+    
+        const additionalData = {
+            event: isBuyOrder ? "BUY" : "SELL",
+            productType: "NRML",
+            tokenID: selectedTokenID,
+            action: isBuyOrder ? "BUY" : "SELL",
+            limitPrice: selectedStockLtp,
+            orderQuantity: quantity,
+            orderSide: isBuyOrder ? "BUY" : "SELL",
+            orderType: priceType.toUpperCase(),
+            timeInForce: "DAY"
+        };
+    
+        console.log('Order Data:', additionalData);
+    
+        // Send the order data through WebSocket
+        if (socketlot && socketlot.readyState === WebSocket.OPEN) {
+            socketlot.send(JSON.stringify(additionalData));
+            console.log("Order sent through WebSocket:", additionalData);
+        } else {
+            console.log("WebSocket is not connected");
+        }
+    
+        // Close the modal after sending the order
+        closeModal(modalId);
+    }
+    
+    // Function to extract the base ticker code from the tickerCode
+    function extractBaseTicker(tickerCode) {
+        const regex = /^[A-Z]+/;
+        const match = tickerCode.match(regex);
+        return match ? match[0] : tickerCode;
+    }
+    
+    function openMarketDepthModal() {
+        const modal = document.getElementById('marketdepth');
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+    
+    function openAddStrategyModal() {
+        const modal = document.getElementById('addStrategyModal');
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+    </script>
+<script>
+    let socket = null;
+    let currentPage = 1;
+    const rowsPerPage = 50;
+    let orderBookData = [];
+
+    let tradeBookData = [];
+    let currentTradeBookPage = 1;
+    const rowsPerPageTradeBook = 50;
+
+    let netPositionData = [];
+    let currentNetPositionPage = 1;
+    const rowsPerPageNetPosition = 50;
+
+    let strategyNetPositionData = [];
+    let currentStrategyPositionPage = 1;
+    const rowsPerPageStrategyPosition = 10;
+
+    function fetchOrderBook() {
+        fetch('/order_book_view/')
+            .then(response => response.json())
+            .then(data => {
+                const orderBookBody = document.getElementById('order-book-body');
+
+                // Check if data was successfully fetched
+                if (data.order_book) {
+                    // Clear any existing content
+                    orderBookBody.innerHTML = '';
+                    orderBookData = data.order_book;
+                    renderPaginatedOrderBook(); // Render the first page
+            } else {
+                document.getElementById('order-book-body').innerHTML = '<tr><td colspan="19">No orders available</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching Order Book:', error);
+            document.getElementById('order-book-body').innerHTML = '<tr><td colspan="19">Error fetching order book</td></tr>';
+        });
+}
+
+function renderPaginatedOrderBook() {
+    const orderBookBody = document.getElementById('order-book-body');
+    const fragment = document.createDocumentFragment(); // Use a document fragment for batch updates
+
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const paginatedData = orderBookData.slice(startIndex, startIndex + rowsPerPage);
+
+    paginatedData.forEach(order => {
+        const row = document.createElement('tr');
+        row.dataset.orderId = order.AppOrderID;
+
+        row.innerHTML = `
+            <td class="orderbook-table">${order.algoID}</td>
+            <td class="orderbook-table">${order.ExchangeSegment}</td>
+            <td class="orderbook-table">${order.InstrumentName}</td>
+            <td class="orderbook-table">${order.OrderType}</td>
+            <td class="order-quantity">${order.OrderQuantity}</td>
+            <td class="orderbook-price">${order.OrderPrice}</td>
+            <td class="orderbook-table">${order.OrderStopPrice}</td>
+            <td class="orderbook-table">${order.LeavesQuantity}</td>
+            <td class="orderbook-table">${order.CumulativeQuantity}</td>
+            <td class="orderbook-table">${order.OrderAverageTradedPrice}</td>
+            <td class="orderbook-table">${order.AppOrderID}</td>
+            <td class="orderbook-table">${order.ClientID}</td>
+            <td class="orderbook-table">${order.ExchangeOrderID}</td>
+            <td class="orderbook-table">${order.OrderUniqueIdentifier}</td>
+            <td class="orderbook-table">${order.OrderStatus}</td>
+            <td class="orderbook-table long-text-cell">${order.Reason}</td>
+            <td class="orderbook-table">${order.ExchangeInstrumentID}</td>
+            <td class="orderbook-table">${order.LastUpdateDateTime}</td>
+            <td class="order-side">${order.OrderSide}</td>
+            <td class="orderbook-table">
+                <span class="modify-icon" onclick="enableEditRow('${order.AppOrderID}')">✎</span>
+                <span class="submit-icon" style="display: none;" onclick="submitModifiedOrder('${order.AppOrderID}')">✔</span>
+                <span class="cancel-icon" onclick="cancelOrder('${order.AppOrderID}', '${order.ClientID}')">✖</span>
+            </td>
+        `;
+        fragment.appendChild(row);
+    });
+
+    orderBookBody.innerHTML = ''; // Clear previous content
+    orderBookBody.appendChild(fragment); // Append the new content in one go
+
+    document.getElementById('page-number').innerText = currentPage;
+}
+// Pagination controls
+function goToNextPage() {
+    if (currentPage * rowsPerPage < orderBookData.length) {
+        currentPage++;
+        renderPaginatedOrderBook();
+    }
+}
+
+function goToPreviousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderPaginatedOrderBook();
+    }
+}
+
+
+function fetchTradeBook() {
+    fetch('/trade_book_view/')
+        .then(response => response.json())
+        .then(data => {
+            const tradeBookBody = document.getElementById('trade-book-body');
+            if (data.trade_book && data.trade_book.length > 0) {
+                tradeBookData = data.trade_book;
+                currentTradeBookPage = 1; // Reset to the first page
+                renderPaginatedTradeBook(); // Render the first page
+            } else {
+                tradeBookBody.innerHTML = '<tr><td colspan="6">No trade book data available</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching Trade Book:', error);
+            document.getElementById('trade-book-body').innerHTML = '<tr><td colspan="6">Error fetching trade book data</td></tr>';
+        });
+}
+
+// Render paginated trade book data
+function renderPaginatedTradeBook() {
+    const tradeBookBody = document.getElementById('trade-book-body');
+    const fragment = document.createDocumentFragment(); // Use a document fragment for batch updates
+
+    const startIndex = (currentTradeBookPage - 1) * rowsPerPageTradeBook;
+    const paginatedData = tradeBookData.slice(startIndex, startIndex + rowsPerPageTradeBook);
+
+    paginatedData.forEach(order => {
+        // Convert nanosecond timestamp to human-readable format
+        const timestampInMilliseconds = order.fillTime / 1e6;
+        const date = new Date(timestampInMilliseconds);
+        const formattedDate = date.toISOString(); // Format date
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${order.algoID}</td>
+            <td>${order.instrumentName}</td>
+            <td>${order.orderType}</td>
+            <td>${order.fillQuantity}</td>
+            <td>${order.fillPrice}</td>
+            <td>${order.ordernumber}</td>
+            <td>${formattedDate}</td> <!-- Converted Date -->
+        `;
+        fragment.appendChild(row);
+    });
+
+    tradeBookBody.innerHTML = ''; // Clear previous content
+    tradeBookBody.appendChild(fragment); // Append new content in one go
+
+    document.getElementById('trade-page-number').innerText = currentTradeBookPage;
+}
+
+// Pagination controls for Trade Book
+function goToNextTradeBookPage() {
+    if (currentTradeBookPage * rowsPerPageTradeBook < tradeBookData.length) {
+        currentTradeBookPage++;
+        renderPaginatedTradeBook();
+    }
+}
+
+function goToPreviousTradeBookPage() {
+    if (currentTradeBookPage > 1) {
+        currentTradeBookPage--;
+        renderPaginatedTradeBook();
+    }
+}
+
+        function fetchNetPosition() {
+            fetch('/net_position_view/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.net_position && Array.isArray(data.net_position)) {
+                        netPositionData = data.net_position;
+                        renderPaginatedNetPosition(); // Call the render function
+                    } else {
+                        document.getElementById('net-position-body').innerHTML = '<tr><td colspan="4">No net position data available</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching Net Position:', error);
+                    document.getElementById('net-position-body').innerHTML = '<tr><td colspan="4">Error fetching net position data</td></tr>';
+                });
+        }
+
+        // Render paginated net position
+        function renderPaginatedNetPosition() {
+            const netPositionBody = document.getElementById('net-position-body');
+            const pageNumberElement = document.getElementById('net-position-page-number');
+            
+            // Ensure the page number element exists before updating it
+            if (!pageNumberElement) {
+                console.error('Pagination element not found');
+                return;  // Stop execution if the pagination element is missing
+            }
+
+            const fragment = document.createDocumentFragment();  // Use a document fragment for batch updates
+
+            // Calculate the start index of the current page
+            const startIndex = (currentNetPositionPage - 1) * rowsPerPageNetPosition;
+            const paginatedData = netPositionData.slice(startIndex, startIndex + rowsPerPageNetPosition);
+
+            // Loop through paginated data and create rows
+            paginatedData.forEach(order => {
+                let netQuantity = order.netQuantity;
+                let netValue = order.netValue;
+                let netPrice = (netQuantity !== 0) ? (netValue / netQuantity).toFixed(2) : 0;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${order.algoID}</td>
+                    <td>${order.instrumentName}</td>
+                    <td>${netQuantity}</td>
+                    <td>${netValue.toFixed(2)}</td>
+                    <td>${netPrice}</td>
+                `;
+                fragment.appendChild(row);
+            });
+
+            // Clear previous table content and append new content
+            netPositionBody.innerHTML = '';
+            netPositionBody.appendChild(fragment);
+
+            pageNumberElement.innerText = currentNetPositionPage;
+
+            // Update pagination controls if necessary
+            updatePaginationControls();
+        }
+
+        // Pagination controls for Net Position
+        function goToNextNetPositionPage() {
+            if (currentNetPositionPage * rowsPerPageNetPosition < netPositionData.length) {
+                currentNetPositionPage++;
+                renderPaginatedNetPosition();
+            }
+        }
+
+        function goToPreviousNetPositionPage() {
+            if (currentNetPositionPage > 1) {
+                currentNetPositionPage--;
+                renderPaginatedNetPosition();
+            }
+        }
+
+        // Update pagination buttons (if necessary)
+        function updatePaginationControls() {
+            const previousButton = document.querySelector("#pagination-controls button:nth-child(1)");
+            const nextButton = document.querySelector("#pagination-controls button:nth-child(3)");
+
+            previousButton.disabled = currentNetPositionPage === 1;
+            nextButton.disabled = currentNetPositionPage * rowsPerPageNetPosition >= netPositionData.length;
+        }
+
+        // Ensure the DOM is fully loaded before running the fetchNetPosition function
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchNetPosition();
+        });
+
+//         const qtyInput = document.getElementById('buyqtyInput');
+// const lotSizeInput = document.getElementById('lotSizeInput');
+// console.log(qtyInput);
+// console.log(lotSizeInput);
+function fetchStrategyNetPosition() {
+    fetch('/strategy_net_position_view/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.net_position && Array.isArray(data.net_position)) {
+                strategyNetPositionData = data.net_position;
+                renderPaginatedStrategyPosition(); // Call the render function
+            } else {
+                document.getElementById('strategy-position-body').innerHTML = '<tr><td colspan="4">No strategy net position data available</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching Strategy Net Position:', error);
+            document.getElementById('strategy-position-body').innerHTML = '<tr><td colspan="4">Error fetching strategy net position data</td></tr>';
+        });
+}
+
+// Render paginated strategy net position
+function renderPaginatedStrategyPosition() {
+    const strategyPositionBody = document.getElementById('strategy-position-body');
+    const pageNumberElement = document.getElementById('strategy-position-page-number');
+
+    // Ensure the page number element exists before updating it
+    if (!pageNumberElement) {
+        console.error('Pagination element not found');
+        return;  // Stop execution if the pagination element is missing
+    }
+
+    const fragment = document.createDocumentFragment();  // Use a document fragment for batch updates
+
+    // Calculate the start index of the current page
+    const startIndex = (currentStrategyPositionPage - 1) * rowsPerPageStrategyPosition;
+    const paginatedData = strategyNetPositionData.slice(startIndex, startIndex + rowsPerPageStrategyPosition);
+
+    // Loop through paginated data and create rows
+    paginatedData.forEach(order => {
+        let netQuantity = order.netQuantity;
+        let netValue = order.netValue;
+        let netPrice = (netQuantity !== 0) ? (netValue / netQuantity).toFixed(2) : 0;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${order.instrumentName}</td>
+            <td>${netQuantity}</td>
+            <td>${netValue.toFixed(2)}</td>
+            <td>${netPrice}</td>
+        `;
+        fragment.appendChild(row);
+    });
+
+    // Clear previous table content and append new content
+    strategyPositionBody.innerHTML = '';
+    strategyPositionBody.appendChild(fragment);
+
+    pageNumberElement.innerText = currentStrategyPositionPage;
+
+    // Update pagination controls if necessary
+    updateStrategyPaginationControls();
+}
+
+// Pagination controls for Strategy Position
+function goToNextStrategyPositionPage() {
+    if (currentStrategyPositionPage * rowsPerPageStrategyPosition < strategyNetPositionData.length) {
+        currentStrategyPositionPage++;
+        renderPaginatedStrategyPosition();
+    }
+}
+
+function goToPreviousStrategyPositionPage() {
+    if (currentStrategyPositionPage > 1) {
+        currentStrategyPositionPage--;
+        renderPaginatedStrategyPosition();
+    }
+}
+
+// Update pagination buttons (if necessary)
+function updateStrategyPaginationControls() {
+    const previousButton = document.querySelector("#strategy-pagination-controls button:nth-child(1)");
+    const nextButton = document.querySelector("#strategy-pagination-controls button:nth-child(3)");
+
+    previousButton.disabled = currentStrategyPositionPage === 1;
+    nextButton.disabled = currentStrategyPositionPage * rowsPerPageStrategyPosition >= strategyNetPositionData.length;
+}
+
+// Ensure the DOM is fully loaded before running the fetchStrategyNetPosition function
+document.addEventListener('DOMContentLoaded', function () {
+    fetchStrategyNetPosition();
+});
+// // Add event listener to the QTY input field
+// qtyInput.addEventListener('input', function () {
+//     const qtyValue = parseInt(qtyInput.value); // Get the QTY value
+
+//     if (!isNaN(qtyValue) && symbols) { // Ensure qty and symbol are valid
+//         lotSizeInput.value = symbolLotsize(qtyValue, symbols); // Calculate lot size based on symbol and qty
+//     } else {
+//         lotSizeInput.value = ''; // Clear lot size if the QTY input is invalid or no symbol is set
+//     }
+// });
+const qtyInput = document.getElementById('buyqtyInput');
+const lotSizeInput = document.getElementById('lotSizeInput');
+const sellQtyInput = document.getElementById('sellqtyInput');
+const sellLotSizeInput = document.getElementById('sellLotSizeInput'); // Assuming there's an input for sell lot size
+
+// console.log(qtyInput);
+// console.log(lotSizeInput);
+// console.log(sellQtyInput);
+// console.log(sellLotSizeInput);
+
+// Add event listener to the Buy QTY input field
+qtyInput.addEventListener('input', function () {
+    const qtyValue = parseInt(qtyInput.value); // Get the QTY value
+
+    if (!isNaN(qtyValue) && symbols) { // Ensure qty and symbol are valid
+        lotSizeInput.value = symbolLotsize(qtyValue, symbols); // Calculate lot size based on symbol and qty
+    } else {
+        lotSizeInput.value = ''; // Clear lot size if the QTY input is invalid or no symbol is set
+    }
+});
+
+// Add event listener to the Sell QTY input field
+sellQtyInput.addEventListener('input', function () {
+    const sellQtyValue = parseInt(sellQtyInput.value); // Get the Sell QTY value
+
+    if (!isNaN(sellQtyValue) && symbols) { // Ensure sell qty and symbol are valid
+        sellLotSizeInput.value = symbolLotsize(sellQtyValue, symbols); // Calculate sell lot size based on symbol and qty
+    } else {
+        sellLotSizeInput.value = ''; // Clear sell lot size if the Sell QTY input is invalid or no symbol is set
+    }
+});
+let ceLTPGlobal = null;
+let peLTPGlobal = null;
+let ceLTPGlobalThird = null;
+let peLTPGlobalFourth = null;
+let scripcodeCE = null; 
+let scripcodePE = null; 
+let scripcodeCEThird = null; 
+let scripcodePEFourth = null; 
+let symbols = null;
+let globalStrategyName = null;
+let optType = null;
+
+const symbolLotsize = (qty, newSelectedOption) => {
+    let multiplier = "";
+    if (newSelectedOption === "NIFTY") {
+        multiplier = 25;
+    } else if (newSelectedOption === "BANKNIFTY") {
+        multiplier = 15;
+    } else if (newSelectedOption === "FINNIFTY") {
+        multiplier = 25;
+    } else if (newSelectedOption === "MIDCPNIFTY") {
+        multiplier = 50;
+    }
+    return qty * multiplier;
+};
+
+async function buyHandleClick() {
+    const price = document.getElementById('newBuyPriceInput').value;
+    const qty = document.getElementById('buyqtyInput').value; 
+    const symbolLotsizes = document.getElementById('lotSizeInput').value; 
+
+    const biddingMode = document.getElementById('biddingModeSelect').value;
+
+    // Make sure symbol is selected (update this part according to your setup)
+    const selectedSymbol = symbol; // Replace this with your actual selected symbol
+
+    if (!price || !qty || !biddingMode || !selectedSymbol) {
+        alert("Please fill in all required fields.");
+        return;
+    }
+
+    // Calculate lot size based on the selected symbol and qty
+    const lot_size = symbolLotsize(qty, selectedSymbol);
+    console.log("lot_size", symbolLotsize);
+
+    console.log("CE LTP:", ceLTPGlobal, "PE LTP:", peLTPGlobal);
+
+    if (globalStrategyName === "STRADDLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        // Create an array to store both order details
+        const orders = [
+            { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+            { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+        ];
+
+        try {
+            // Use a for loop to place each order one by one
+            for (let i = 0; i < orders.length; i++) {
+                const order = orders[i];
+                await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+            }
+        } catch (error) {
+            console.error("Error placing orders:", error);
+            alert("An error occurred while placing orders.");
+        }
+    } 
+    if (globalStrategyName === "STRANGLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        // Create an array to store both order details
+        const orders = [
+            { optType: "PE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+            { optType: "CE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+        ];
+
+        try {
+            // Use a for loop to place each order one by one
+            for (let i = 0; i < orders.length; i++) {
+                const order = orders[i];
+                await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+            }
+        } catch (error) {
+            console.error("Error placing orders:", error);
+            alert("An error occurred while placing orders.");
+        }
+    } 
+    else if (globalStrategyName === "ICNDBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird && peLTPGlobalFourth && scripcodePEFourth){
+        const orders = [
+            { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+            { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
+            { optType: "CE", ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird },
+            { optType: "PE", ltpValue: peLTPGlobalFourth, qty: symbolLotsizes, scripcode: scripcodePEFourth }
+        ];
+
+        try {
+            for (let i = 0; i < orders.length; i++) {
+                const order = orders[i];
+                await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+            }
+        } catch (error) {
+            console.error("Error placing orders:", error);
+            alert("An error occurred while placing orders.");
+        }
+    }
+
+    else if (globalStrategyName === "BUTTERFLYBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird){
+        const orders = [
+            { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+            { optType: optType, ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
+            { optType: optType, ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird }
+        ];
+
+        try {
+            for (let i = 0; i < orders.length; i++) {
+                const order = orders[i];
+                await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+            }
+        } catch (error) {
+            console.error("Error placing orders:", error);
+            alert("An error occurred while placing orders.");
+        }
+    }
+    else {
+        alert("LTP or scripcode data is not available. Please try again.");
+    }
+}
+// let ceLTPGlobal = null;
+// let peLTPGlobal = null;
+// let scripcodeCE = null; // Add a global variable for scripcode CE
+// let scripcodePE = null; // Add a global variable for scripcode PE
+// let symbols = null;
+// let globalStrategyName = null;
+
+// const symbolLotsize = (qty, newSelectedOption) => {
+//     let multiplier = "";
+//     if (newSelectedOption === "NIFTY") {
+//         multiplier = 25;
+//     } else if (newSelectedOption === "BANKNIFTY") {
+//         multiplier = 15;
+//     } else if (newSelectedOption === "FINNIFTY") {
+//         multiplier = 25;
+//     } else if (newSelectedOption === "MIDCPNIFTY") {
+//         multiplier = 50;
+//     }
+//     return qty * multiplier;
+// };
+// async function buyHandleClick() {
+//     const price = parseFloat(document.getElementById('newBuyPriceInput').value);
+//     const qty = parseInt(document.getElementById('buyqtyInput').value, 10);  // Ensure qty is a number
+//     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
+//     const biddingMode = document.getElementById('biddingModeSelect').value;
+//     const selectedSymbol = symbol;
+
+//     if (!price || isNaN(price) || !qty || isNaN(qty) || !biddingMode || !selectedSymbol) {
+//         alert("Please fill in all required fields with valid values.");
+//         return;
+//     }
+
+//     const lot_size = symbolLotsize(qty, selectedSymbol);
+//     console.log("lot_size", symbolLotsizes);
+//     if (globalStrategyName === "STRADDLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+//         // Create an array to store both order details
+//         const orders = [
+//             { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+//             { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+//         ];
+
+//         try {
+//             // Use a for loop to place each order one by one
+//             for (let i = 0; i < orders.length; i++) {
+//                 const order = orders[i];
+//                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+//             }
+//         } catch (error) {
+//             console.error("Error placing orders:", error);
+//             alert("An error occurred while placing orders.");
+//         }
+//     } 
+//     else if (globalStrategyName === "ICNDBID" && ceLTPGlobal && peLTPGlobal && ceLTPGlobal2 && peLTPGlobal2 && scripcodeCE && scripcodePE && scripcodeCE2 && scripcodePE2){
+//         const orders = [
+//             { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+//             { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
+//             { optType: "CE", ltpValue: ceLTPGlobal2, qty: symbolLotsizes, scripcode: scripcodeCE2 },
+//             { optType: "PE", ltpValue: peLTPGlobal2, qty: symbolLotsizes, scripcode: scripcodePE2 }
+//         ];
+
+//         try {
+//             // Use a for loop to place each order one by one
+//             for (let i = 0; i < orders.length; i++) {
+//                 const order = orders[i];
+//                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+//             }
+//         } catch (error) {
+//             console.error("Error placing orders:", error);
+//             alert("An error occurred while placing orders.");
+//         }
+//     }
+//     else if (globalStrategyName === "BUTTERFLYBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird){
+//         const orders = [
+//             { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+//             { optType: optType, ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
+//             { optType: optType, ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird }
+//         ];
+
+//         try {
+//             for (let i = 0; i < orders.length; i++) {
+//                 const order = orders[i];
+//                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+//             }
+//         } catch (error) {
+//             console.error("Error placing orders:", error);
+//             alert("An error occurred while placing orders.");
+//         }
+//     }
+//     else {
+//         alert("LTP or scripcode data is not available. Please try again.");
+//     }
+    // if (ceLTPGlobal1 && peLTPGlobal1 && ceLTPGlobal2 && peLTPGlobal2 && scripcodeCE1 && scripcodePE1 && scripcodeCE2 && scripcodePE2) {
+    //     const orders = [
+    //         { optType: "CE", ltpValue: ceLTPGlobal1, qty: symbolLotsizes, scripcode: scripcodeCE1 },
+    //         { optType: "PE", ltpValue: peLTPGlobal1, qty: symbolLotsizes, scripcode: scripcodePE1 },
+    //         { optType: "CE", ltpValue: ceLTPGlobal2, qty: symbolLotsizes, scripcode: scripcodeCE2 },
+    //         { optType: "PE", ltpValue: peLTPGlobal2, qty: symbolLotsizes, scripcode: scripcodePE2 }
+    //     ];
+
+    //     try {
+    //         for (let i = 0; i < orders.length; i++) {
+    //             const order = orders[i];
+    //             await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+    //         }
+    //         alert("All orders placed successfully!");
+    //     } catch (error) {
+    //         console.error("Error placing orders:", error);
+    //         alert("An error occurred while placing one or more orders.");
+    //     }
+    // } else {
+    //     alert("LTP or scripcode data is not available for one or more legs. Please try again.");
+    // }
+// }
+// async function buyHandleClick() {
+//     const price = parseFloat(document.getElementById('newBuyPriceInput').value);
+//     const qty = parseInt(document.getElementById('buyqtyInput').value, 10);
+//     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
+//     const biddingMode = document.getElementById('biddingModeSelect').value;
+//     const selectedSymbol = symbol;
+
+//     if (!price || !qty || !biddingMode || !selectedSymbol) {
+//         alert("Please fill in all required fields.");
+//         return;
+//     }
+
+//     // Calculate lot size based on the selected symbol and qty
+//     const lot_size = symbolLotsize(qty, selectedSymbol);
+//     console.log("lot_size", symbolLotsizes);
+
+//     console.log("CE1 LTP:", ceLTPGlobal1, "PE1 LTP:", peLTPGlobal1);
+//     console.log("CE2 LTP:", ceLTPGlobal2, "PE2 LTP:", peLTPGlobal2);
+
+//     // Ensure that LTP and scripcode data for all legs is available
+//     if (ceLTPGlobal1 !== null && peLTPGlobal1 !== null && ceLTPGlobal2 !== null && peLTPGlobal2 !== null &&
+//         scripcodeCE1 !== null && scripcodePE1 !== null && scripcodeCE2 !== null && scripcodePE2 !== null) {
+
+//         // Create an array to store the four orders (2 CE and 2 PE)
+//         const orders = [
+//             { optType: "CE", ltpValue: ceLTPGlobal1, qty: buyqtyInput, scripcode: scripcodeCE1 },
+//             { optType: "PE", ltpValue: peLTPGlobal1, qty: buyqtyInput, scripcode: scripcodePE1 },
+//             { optType: "CE", ltpValue: ceLTPGlobal2, qty: buyqtyInput, scripcode: scripcodeCE2 },
+//             { optType: "PE", ltpValue: peLTPGlobal2, qty: buyqtyInput, scripcode: scripcodePE2 }
+//         ];
+
+//         console.log("Orders to be placed:", orders);
+
+//         try {
+//             // Iterate through all orders and place them one by one
+//             for (let i = 0; i < orders.length; i++) {
+//                 const order = orders[i];
+//                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+//             }
+//             alert("All orders placed successfully!");
+//         } catch (error) {
+//             console.error("Error placing orders:", error);
+//             alert("An error occurred while placing one or more orders.");
+//         }
+//     } else {
+//         alert("LTP or scripcode data is not available for one or more legs. Please try again.");
+//     }
+// }
+// async function buyHandleClick() {
+//     const price = document.getElementById('newBuyPriceInput').value;
+//     const qty = document.getElementById('buyqtyInput').value; 
+//     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
+
+//     const biddingMode = document.getElementById('biddingModeSelect').value;
+
+//     const selectedSymbol = symbol;
+
+//     if (!price || !qty || !biddingMode || !selectedSymbol) {
+//         alert("Please fill in all required fields.");
+//         return;
+//     }
+
+//     // Calculate lot size based on the selected symbol and qty
+//     const lot_size = symbolLotsize(qty, selectedSymbol);
+//     console.log("lot_size", symbolLotsize);
+
+//     console.log("CE LTP:", ceLTPGlobal, "PE LTP:", peLTPGlobal);
+
+//     if (ceLTPGlobal !== null && peLTPGlobal !== null && scripcodeCE !== null && scripcodePE !== null) {
+//         // Create an array to store both order details
+//         const orders = [
+//             { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+//             { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+//         ];
+
+//         console.log("orders",orders)
+//         try {
+            
+//             for (let i = 0; i < orders.length; i++) {
+//                 const order = orders[i];
+//                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+//             }
+//         } catch (error) {
+//             console.error("Error placing orders:", error);
+//             alert("An error occurred while placing orders.");
+//         }
+//     } else {
+//         alert("LTP or scripcode data is not available. Please try again.");
+//     }
+// }
+async function placeOrder(optType, ltpValue, qty, scripcode) {
+    const tokenID = `NSEFO${scripcode}`;
+
+    const orderData = {
+        event: "BUY",
+        productType: "NRML",
+        tokenID: tokenID,
+        action: "BUY",
+        limitPrice: parseFloat(ltpValue),  // Ensure it's a number
+        orderQuantity: parseInt(qty, 10),  // Ensure it's a number
+        orderSide: "BUY",
+        appOrderID: "",
+        uniqueIdentifier: "",
+        stopPrice: 0,
+        disclosedQuantity: "0",
+        timeInForce: "DAY",
+        orderType: "MARKET",
+        algoID: 499
+    };
+
+    try {
+        const response = await fetch('/api/placeOrder/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert(`Order placed successfully for ${optType}!`);
+        } else {
+            throw new Error(`Failed to place order: ${data.error || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert(`Failed to place the order for ${optType}.`);
+    }
+}
+// async function placeOrder(optType, ltpValue, qty, scripcode) {
+    
+//     const tokenID = `NSEFO${scripcode}`;
+
+//     const orderData = {
+//         event: "BUY",
+//         productType: "NRML",
+//         tokenID: tokenID, // Use the combined tokenID here
+//         action: "BUY",
+//         limitPrice: ltpValue,
+//         orderQuantity: qty,
+//         orderSide: "BUY",
+//         appOrderID: "",
+//         uniqueIdentifier: "",
+//         stopPrice: 0,
+//         disclosedQuantity: "0",
+//         timeInForce: "DAY",
+//         orderType: "MARKET",
+//         algoID: 499
+//     };
+
+//     console.log(`Placing order for ${optType}:`, orderData); // Log order data
+
+//     try {
+//         const response = await fetch('/api/placeOrder/', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(orderData)
+//         });
+
+//         const data = await response.json();
+//         console.log('Response for order:', data); // Log response data
+
+//         if (response.ok) {
+//             console.log('Success:', data);
+//             alert(`Order placed successfully for ${optType}!`);
+//         } else {
+//             throw new Error(`Failed to place order: ${data.error || 'Unknown error'}`);
+//         }
+//     } catch (error) {
+//         console.error('Error:', error);
+//         alert(`Failed to place the order for ${optType}.`);
+//     }
+// }
+async function sellHandleClick() {
+    const price = document.getElementById('newSellPriceInput').value;
+    const qty = document.getElementById('sellqtyInput').value;
+    const symbolLotsizes = document.getElementById('sellLotSizeInput').value; 
+    const biddingMode = document.getElementById('biddingModeSelect').value;
+
+    if (!price || !qty || !biddingMode) {
+        alert("Please fill in all required fields.");
+        return;
+    }
+
+    // Assuming `globalStrategyName` is set according to your strategy selection logic
+    if (globalStrategyName === "STRADDLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        const orders = [
+            { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+            { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+        ];
+
+        try {
+            for (let i = 0; i < orders.length; i++) {
+                const order = orders[i];
+                await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+            }
+        } catch (error) {
+            console.error("Error placing sell orders:", error);
+            alert("An error occurred while placing sell orders.");
+        }
+    }
+    else if (globalStrategyName === "ICNDBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird && peLTPGlobalFourth && scripcodePEFourth) {
+        const orders = [
+            { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+            { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
+            { optType: "CE", ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird },
+            { optType: "PE", ltpValue: peLTPGlobalFourth, qty: symbolLotsizes, scripcode: scripcodePEFourth }
+        ];
+
+        try {
+            for (let i = 0; i < orders.length; i++) {
+                const order = orders[i];
+                await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+            }
+        } catch (error) {
+            console.error("Error placing sell orders:", error);
+            alert("An error occurred while placing sell orders.");
+        }
+    }
+    else if (globalStrategyName === "BUTTERFLYBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird) {
+        const orders = [
+            { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+            { optType: optType, ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
+            { optType: optType, ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird }
+        ];
+
+        try {
+            for (let i = 0; i < orders.length; i++) {
+                const order = orders[i];
+                await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+            }
+        } catch (error) {
+            console.error("Error placing sell orders:", error);
+            alert("An error occurred while placing sell orders.");
+        }
+    } else {
+        alert("LTP or scripcode data is not available. Please try again.");
+    }
+}
+// async function sellHandleClick() {
+//     const price = document.getElementById('newSellPriceInput').value;
+//     const qty = document.getElementById('sellqtyInput').value;
+//     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
+//     const biddingMode = document.getElementById('biddingModeSelect').value;
+
+//     if (!price || !qty || !biddingMode) {
+//         alert("Please fill in all required fields.");
+//         return;
+//     }
+
+//     console.log("CE LTP:", ceLTPGlobal, "PE LTP:", peLTPGlobal);
+
+//     if (ceLTPGlobal !== null && peLTPGlobal !== null && scripcodeCE !== null && scripcodePE !== null) {
+//         const orders = [
+//             { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+//             { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+//         ];
+
+//         console.log("orders", orders);
+//         try {
+//             // Use a for loop to place each order one by one
+//             for (let i = 0; i < orders.length; i++) {
+//                 const order = orders[i];
+//                 await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+//             }
+//         } catch (error) {
+//             console.error("Error placing sell orders:", error);
+//             alert("An error occurred while placing sell orders.");
+//         }
+//     } else {
+//         alert("LTP or scripcode data is not available. Please try again.");
+//     }
+// }
+
+async function placeSellOrder(optType, ltpValue, qty, scripcode) {
+    const tokenID = `NSEFO${scripcode}`;
+
+    const orderData = {
+        event: "SELL",
+        productType: "NRML",
+        tokenID: tokenID,
+        action: "SELL",
+        limitPrice: parseFloat(ltpValue),
+        orderQuantity: parseInt(qty, 10), 
+        orderSide: "SELL",
+        appOrderID: "",
+        uniqueIdentifier: "",
+        stopPrice: 0,
+        disclosedQuantity: "0",
+        timeInForce: "DAY",
+        orderType: "MARKET",
+        algoID: 499
+    };
+
+    console.log(`Placing sell order for ${optType}:`, orderData);
+
+    try {
+        const response = await fetch('/api/placeOrder/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderData)
+        });
+
+        const data = await response.json();
+        console.log('Response for sell order:', data);
+
+        if (response.ok) {
+            console.log('Success:', data);
+            alert(`Sell order placed successfully for ${optType}!`);
+        } else {
+            throw new Error(`Failed to place sell order: ${data.error || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert(`Failed to place the sell order for ${optType}.`);
+    }
+}
+
+// function sellHandleClick() {
+//     const price = document.getElementById('newSellPriceInput').value;
+//     const qty = document.getElementById('sellqtyInput').value;
+//     const biddingMode = document.getElementById('biddingModeSelect').value;
+//     const qtyPerCycle = document.getElementById('sellqtyPerCycleInput').value;
+//     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
+//     // const jump = document.getElementById('jumpCheckbox').checked ? 1 : 0;
+//     // const step = document.getElementById('stepInput').value;
+//     // const jumpQty = document.getElementById('jumpQtyInput').value;
+
+//     if (!price || !qty || !biddingMode) {
+//         alert("Please fill in all required fields.");
+//         return;
+//     }
+
+//     const orderData = {
+//         event: "SELL",
+//         productType: "NRML",
+//         tokenID: "NSEFO35382",
+//         action: "SELL",
+//         limitPrice: price,
+//         orderQuantity: qty,
+//         orderSide: "SELL",
+//         appOrderID: "",
+//         uniqueIdentifier: "",
+//         stopPrice: 0,
+//         disclosedQuantity: "0",
+//         timeInForce: "DAY",
+//         orderType: "MARKET",
+//         algoID: 499
+//     };
+
+//     fetch('/api/placeOrder/', {
+//         method: 'POST',
+//         body: JSON.stringify(orderData)  
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         console.log('Success:', data);
+//         alert("Order placed successfully!");
+//     })
+//     .catch((error) => {
+//         console.error('Error:', error);
+//         alert("Failed to place the order.");
+//     });
+// }
+
+function submitModifiedOrder(orderID) {
+    const quantity = document.getElementById(`edit-quantity-${orderID}`).value;
+    const price = document.getElementById(`edit-price-${orderID}`).value;
+
+    const modifiedOrderData = {
+        orderFiller: orderID,
+        limitPrice: price,
+        orderQuantity: quantity
+    };
+
+    console.log('Submitting modified order:', modifiedOrderData);
+
+    fetch('/api/modifyOrder/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Cookie': 'sessionid=ulfl5bco42ko7hfph3b5ktkhhc8ceq5m', 
+        },
+        body: JSON.stringify(modifiedOrderData),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Success:', data);
+
+        // Show toast notification based on API response
+        if (data.type === "success") {
+            showToast(data.desc, 'success');
+        } else {
+            showToast(data.desc, 'failure');
+        }
+
+        // Optionally close modal and update the watchlist table
+        // closeModal('watchlistModal');
+        // updateWatchlistTable();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('An error occurred while modifying the order.', 'failure');
+    });
+
+    // Optionally update the UI immediately after submission
+    const row = document.querySelector(`tr[data-order-id="${orderID}"]`);
+    if (row) {
+        row.querySelector('.submit-icon').style.display = 'none';
+        row.querySelector('.modify-icon').style.display = 'inline';
+    }
+}
+
+
+function enableEditRow(orderID) {
+    console.log("Modify clicked for order:", orderID);
+    
+    const row = document.querySelector(`tr[data-order-id="${orderID}"]`);
+
+    console.log("Found row:", row);  // Check if row is found
+    if (row) {
+        const orderQuantity = row.querySelector('.order-quantity').innerText;
+        const orderPrice = row.querySelector('.orderbook-price').innerText;
+        const orderSide = row.querySelector('.order-side').innerText;
+
+        row.querySelector('.order-quantity').innerHTML = `<input type="number" value="${orderQuantity}" id="edit-quantity-${orderID}">`;
+        row.querySelector('.orderbook-price').innerHTML = `<input type="number" value="${orderPrice}" id="edit-price-${orderID}">`;
+        row.querySelector('.order-side').innerHTML = `
+            <select id="edit-side-${orderID}">
+                <option value="BUY" ${orderSide === 'BUY' ? 'selected' : ''}>BUY</option>
+                <option value="SELL" ${orderSide === 'SELL' ? 'selected' : ''}>SELL</option>
+            </select>
+        `;
+
+        row.querySelector('.modify-icon').style.display = 'none';
+        row.querySelector('.submit-icon').style.display = 'inline';
+    }
+}
+
+function cancelOrder(orderID, clientID) {
+    console.log("Cancel clicked for order:", orderID, "ClientID:", clientID);
+    const confirmCancel = confirm('Are you sure you want to cancel this order?');
+    if (confirmCancel) {
+        const cancelOrderData = {
+         "orderFiller":orderID
+        };
+
+        console.log('Sending cancel order:', cancelOrderData);
+
+        fetch('/api/cancelOrder/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cancelOrderData),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Success:', data);
+
+        // Show toast notification based on API response
+        if (data.type === "success") {
+            showToast(data.desc, 'success');
+        } else {
+            showToast(data.desc, 'failure');
+        }
+
+        // Optionally close modal and update the watchlist table
+        // closeModal('watchlistModal');
+        // updateWatchlistTable();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('An error occurred while cancel the order.', 'failure');
+    });
+    }}
+
+</script>
+<script>
+document.getElementById('instrument-input').addEventListener('input', filterTable);
+document.getElementById('exchange-input').addEventListener('input', filterTable);
+document.getElementById('segment-input').addEventListener('input', filterTable);
+document.getElementById('status-input').addEventListener('input', filterTable);
+
+const exchangeSegments = {
+    'NSECM': 1, 'NSEFO': 2, 'NSECD': 3, 'NSECO': 4, 'SLBM': 5, 'NIFSC': 7, 
+    'BSECM': 11, 'BSEFO': 12, 'BSECD': 13, 'BSECO': 14, 'NCDEX': 21, 'MSECM': 41, 
+    'MSEFO': 42, 'MSECD': 43, 'MCXFO': 51
+};
+
+function filterTable() {
+    const instrumentInput = document.getElementById('instrument-input').value.toUpperCase();
+    const exchangeInput = document.getElementById('exchange-input').value.toUpperCase();
+    const segmentInput = document.getElementById('segment-input').value.toUpperCase();
+    const statusInput = document.getElementById('status-input').value.toUpperCase();
+
+    const table = document.getElementById('order-book-body');
+    const rows = table.getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const instrumentName = rows[i].getElementsByTagName('td')[1].textContent.toUpperCase();
+        const exchangeSegment = rows[i].getElementsByTagName('td')[0].textContent.toUpperCase();
+        const orderStatus = rows[i].getElementsByTagName('td')[13].textContent.toUpperCase();
+
+        const combinedSegment = exchangeInput + segmentInput;
+
+        const matchesInstrument = instrumentName.includes(instrumentInput);
+        const matchesExchangeSegment = exchangeSegment.includes(combinedSegment);
+        const matchesOrderStatus = orderStatus.includes(statusInput);
+
+        if (matchesInstrument && matchesExchangeSegment && matchesOrderStatus) {
+            rows[i].style.display = '';
+        } else {
+            rows[i].style.display = 'none';
+        }
+    }
+}
+
+function refreshTable() {
+    document.getElementById('instrument-input').value = '';
+    document.getElementById('exchange-input').value = '';
+    document.getElementById('segment-input').value = '';
+    document.getElementById('status-input').value = '';
+    filterTable();
+}
+
+function cancelAll() {
+    console.log("Cancel All Orders");
+}
+</script>
+<!-- <script>
+    document.getElementById('goToStrategyList').addEventListener('click', function() {
+        window.location.href = "{% url 'strategy_list' %}";
+    });
+</script> -->
+<script>
+    const token = '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY';
+
+    function loadSymbols() {
+        fetch('/api/symbols/', {
+            headers: {
+                'auth-token': token,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            let symbolSelect = document.getElementById('symbol');
+            symbolSelect.innerHTML = '<option value="" disabled selected>Select Symbol</option>';
+            data.forEach(symbol => {
+                symbolSelect.innerHTML += `<option value="${symbol}">${symbol}</option>`;
+            });
+        })
+        .catch(error => {
+            document.getElementById('symbol_error').innerText = "Error loading symbols.";
+        });
+    }
+
+    function loadExpiry(symbol) {
+        fetch(`/api/expiry/?symbol=${symbol}`, {
+            headers: {
+                'auth-token': token,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            let expirySelect1 = document.getElementById('expiry1');
+            expirySelect1.innerHTML = '<option value="" disabled selected>Select Expiry1</option>';
+            data.forEach(expiry => {
+                expirySelect1.innerHTML += `<option value="${expiry}">${expiry}</option>`;
+            });
+            expirySelect1.disabled = false;
+
+            let expirySelect2 = document.getElementById('expiry2');
+            expirySelect2.innerHTML = '<option value="" disabled selected>Select Expiry2</option>';
+            data.forEach(expiry => {
+                expirySelect2.innerHTML += `<option value="${expiry}">${expiry}</option>`;
+            });
+            expirySelect2.disabled = false;
+        })
+        .catch(error => {
+            document.getElementById('expiry1_error').innerText = "Error loading expiry dates.";
+            document.getElementById('expiry2_error').innerText = "Error loading expiry dates.";
+        });
+    }
+
+    // Load strikes for all strike prices (strikeprice1, strikeprice2, strikeprice3, strikeprice4) based on selected symbol and expiry1
+    function loadStrikes(symbol, expiry) {
+        fetch(`/api/strikes/?symbol=${symbol}&expiry=${expiry}`, {
+            headers: {
+                'auth-token': token,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            let strikeSelect1 = document.getElementById('strikeprice1');
+            strikeSelect1.innerHTML = '<option value="" disabled selected>Select StrikePrice1</option>';
+            data.forEach(strike => {
+                strikeSelect1.innerHTML += `<option value="${strike}">${strike}</option>`;
+            });
+            strikeSelect1.disabled = false;
+
+            let strikeSelect2 = document.getElementById('strikeprice2');
+            strikeSelect2.innerHTML = '<option value="" disabled selected>Select StrikePrice2</option>';
+            data.forEach(strike => {
+                strikeSelect2.innerHTML += `<option value="${strike}">${strike}</option>`;
+            });
+            strikeSelect2.disabled = false;
+
+            let strikeSelect3 = document.getElementById('strikeprice3');
+            strikeSelect3.innerHTML = '<option value="" disabled selected>Select StrikePrice3</option>';
+            data.forEach(strike => {
+                strikeSelect3.innerHTML += `<option value="${strike}">${strike}</option>`;
+            });
+            strikeSelect3.disabled = false;
+
+            let strikeSelect4 = document.getElementById('strikeprice4');
+            strikeSelect4.innerHTML = '<option value="" disabled selected>Select StrikePrice4</option>';
+            data.forEach(strike => {
+                strikeSelect4.innerHTML += `<option value="${strike}">${strike}</option>`;
+            });
+            strikeSelect4.disabled = false;
+        })
+        .catch(error => {
+            document.getElementById('strikeprice1_error').innerText = "Error loading strikes.";
+            document.getElementById('strikeprice2_error').innerText = "Error loading strikes.";
+            document.getElementById('strikeprice3_error').innerText = "Error loading strikes.";
+            document.getElementById('strikeprice4_error').innerText = "Error loading strikes.";
+        });
+    }
+
+    // Event Listeners
+    document.getElementById('symbol').addEventListener('change', function() {
+        const selectedSymbol = this.value;
+        loadExpiry(selectedSymbol);
+    });
+
+    document.getElementById('expiry1').addEventListener('change', function() {
+        const selectedSymbol = document.getElementById('symbol').value;
+        const selectedExpiry = this.value;
+        loadStrikes(selectedSymbol, selectedExpiry);
+    });
+    loadSymbols();
+</script>
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function submitStrategy() {
+                const portfolio = document.getElementById("portfolio_name").value;
+                const clientId = document.getElementById("watchlist_client_id").value;
+                const underlying = document.getElementById("symbol").value;
+                const strategyCode = document.getElementById("strategy_type").value;
+                const biddingMode = document.getElementById("strategy_mode").value;
+
+                // Validate required fields
+                if (!portfolio || !clientId || !underlying || strategyCode === "default" || biddingMode === "default") {
+                    alert("Please fill out all required fields.");
+                    return;
+                }
+
+                let strategyData;
+
+                // Handle different strategies based on the strategyCode
+                if (strategyCode === "STRADDLE") {
+                    const leg1Type = "CE";
+                    const leg1Strike = document.getElementById("strikeprice1").value || 0;
+                    const leg1Quantity = document.getElementById("ratio1").value || 1;
+                    const leg1ExecutionType = document.getElementById("leg1").value || "default";
+                    const leg1Expiry = document.getElementById("expiry1").value || "";
+
+                    const leg2Type = "PE";
+                    const leg2Strike = document.getElementById("strikeprice1").value || 0;
+                    const leg2Quantity = document.getElementById("ratio1").value || 1;
+                    const leg2ExecutionType = document.getElementById("leg2").value || "default";
+                    const leg2Expiry = document.getElementById("expiry1").value || "";
+
+                    const leg3Type = "CE";
+                    const leg3Strike = document.getElementById("strikeprice3").value || 0;
+                    const leg3Quantity = document.getElementById("ratio3").value || 1;
+                    const leg3ExecutionType = document.getElementById("leg3").value || "default";
+                    const leg3Expiry = document.getElementById("expiry1").value || "";
+
+                    const leg4Type = "PE";
+                    const leg4Strike = document.getElementById("strikeprice4").value || 0;
+                    const leg4Quantity = document.getElementById("ratio3").value || 1;
+                    const leg4ExecutionType = document.getElementById("leg4").value || "default";
+                    const leg4Expiry = document.getElementById("expiry1").value || "";
+                    strategyData = {
+                        portfolio,
+                        spread_type:  "",
+                        client_id: clientId,
+                        underlying,
+                        strategy_code: strategyCode,
+                        bidding_mode: biddingMode,
+                        legs_info: {
+                            leg1: { type: leg1Type, strike: leg1Strike, quantity: leg1Quantity, executionType: leg1ExecutionType, expiry: leg1Expiry },
+                            leg2: { type: leg2Type, strike: leg2Strike, quantity: leg2Quantity, executionType: leg2ExecutionType, expiry: leg2Expiry },
+                            leg3: { type: leg3Type, strike: leg3Strike, quantity: leg3Quantity, executionType: leg3ExecutionType, expiry: leg3Expiry },
+                            leg4: { type: leg4Type, strike: leg4Strike, quantity: leg4Quantity, executionType: leg4ExecutionType, expiry: leg4Expiry }
+                        },
+                        active: true,
+                        expiry: leg1Expiry
+                    };
+
+                } else if (strategyCode === "ICNDBID") {
+                    const leg1Type = "PE";
+                    const leg1Strike = document.getElementById("strikeprice1").value || 0;
+                    const leg1Quantity = document.getElementById("ratio1").value || 1;
+                    const leg1ExecutionType = document.getElementById("leg1").value || "default";
+                    const leg1Expiry = document.getElementById("expiry1").value || "";
+
+                    const leg2Type = "PE";
+                    const leg2Strike = document.getElementById("strikeprice2").value || 0;
+                    const leg2Quantity = document.getElementById("ratio2").value || 1;
+                    const leg2ExecutionType = document.getElementById("leg2").value || "default";
+                    const leg2Expiry = document.getElementById("expiry1").value || "";
+
+                    const leg3Type = "CE";
+                    const leg3Strike = document.getElementById("strikeprice3").value || 0;
+                    const leg3Quantity = document.getElementById("ratio3").value || 1;
+                    const leg3ExecutionType = document.getElementById("leg3").value || "default";
+                    const leg3Expiry = document.getElementById("expiry1").value || "";
+
+                    const leg4Type = "CE";
+                    const leg4Strike = document.getElementById("strikeprice4").value || 0;
+                    const leg4Quantity = document.getElementById("ratio3").value || 1;
+                    const leg4ExecutionType = document.getElementById("leg4").value || "default";
+                    const leg4Expiry = document.getElementById("expiry1").value || "";
+                    strategyData = {
+                        portfolio,
+                        spread_type:  "",
+                        client_id: clientId,
+                        underlying,
+                        strategy_code: strategyCode,
+                        bidding_mode: biddingMode,
+                        legs_info: {
+                            leg1: { type: leg1Type, strike: leg1Strike, quantity: leg1Quantity, ratio: leg1Quantity, executionType: leg1ExecutionType, expiry: leg1Expiry },
+                            leg2: { type: leg2Type, strike: leg2Strike, quantity: leg2Quantity, ratio: leg2Quantity, executionType: leg2ExecutionType, expiry: leg2Expiry },
+                            leg3: { type: leg3Type, strike: leg3Strike, quantity: leg3Quantity, ratio: leg3Quantity, executionType: leg3ExecutionType, expiry: leg3Expiry },
+                            leg4: { type: leg4Type, strike: leg4Strike, quantity: leg4Quantity, ratio: leg4Quantity, executionType: leg4ExecutionType, expiry: leg4Expiry }
+                        },
+                        active: true,
+                        expiry: leg1Expiry
+                    };
+                } else if (strategyCode === "BUTTERFLYBID") {
+                    // Handle BUTTERFLYBID strategy with dynamic option type
+                    const leg1Type = document.getElementById("opttype").value || "default";
+                    const leg2Type = leg1Type;
+                    const leg3Type = leg1Type;
+
+                    const leg1Strike = document.getElementById("strikeprice1").value || 0;
+                    const leg1Quantity = document.getElementById("ratio1").value || 1;
+                    const leg1ExecutionType = document.getElementById("leg1").value || "default";
+                    const leg1Expiry = document.getElementById("expiry1").value || "";
+
+                    const leg2Strike = document.getElementById("strikeprice2").value || 0;
+                    const leg2Quantity = document.getElementById("ratio2").value || 1;
+                    const leg2ExecutionType = document.getElementById("leg2").value || "default";
+                    const leg2Expiry = document.getElementById("expiry1").value || "";
+
+                    const leg3Strike = document.getElementById("strikeprice3").value || 0;
+                    const leg3Quantity = document.getElementById("ratio3").value || 1;
+                    const leg3ExecutionType = document.getElementById("leg3").value || "default";
+                    const leg3Expiry = document.getElementById("expiry1").value || "";
+
+                    // Assign to strategyData for BUTTERFLYBID
+                    strategyData = {
+                        portfolio,
+                        spread_type: "",
+                        client_id: clientId,
+                        underlying,
+                        strategy_code: strategyCode,
+                        bidding_mode: biddingMode,
+                        legs_info: {
+                            leg1: { type: leg1Type, strike: leg1Strike, quantity: leg1Quantity, ratio: leg1Quantity, executionType: leg1ExecutionType, expiry: leg1Expiry },
+                            leg2: { type: leg2Type, strike: leg2Strike, quantity: leg2Quantity, ratio: leg2Quantity,executionType: leg2ExecutionType, expiry: leg2Expiry },
+                            leg3: { type: leg3Type, strike: leg3Strike, quantity: leg3Quantity, ratio: leg3Quantity,executionType: leg3ExecutionType, expiry: leg3Expiry }
+                        },
+                        active: true,
+                        expiry: leg1Expiry
+                    };
+
+             } else {    
+                    alert("Unsupported strategy type.");
+                    return;
+                }
+
+                // Submit the strategy payload
+                fetch('http://192.168.50.82:8010/v1/strategy-watchlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'auth-token': '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY'
+                    },
+                    body: JSON.stringify(strategyData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert('Strategy added successfully!');
+                        window.location.reload(); 
+                    } else {
+                        alert('Error: ' + (data.error || 'Unexpected error'));
+                        
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+
+            // Bind the submit function to the button
+            document.querySelector('.add-button').onclick = submitStrategy;
+        });
+    </script>
+<script>
+    let ws;
+document.addEventListener("DOMContentLoaded", function() {
+    
+    let userStrategy = {};
+
+    
+    function openWebSocket() {
+        ws = new WebSocket('ws://192.168.50.82:8012/ws/data');
+
+        ws.onopen = () => console.log('WebSocket connected');
+        ws.onmessage = handleWebSocketMessage;
+        ws.onerror = (error) => console.error('WebSocket error:', error);
+        ws.onclose = () => console.log('WebSocket disconnected');
+    }
+
+    function handleWebSocketMessage(event) {
+    const response = JSON.parse(event.data);
+    const { watchlists } = response;
+    // console.log("@@", watchlists);
+
+    watchlists.forEach(watchlist => {
+        const { watchlist_id, buy_price, sell_price, buy_qty, sell_qty, lot_size } = watchlist;
+        const rows = document.querySelectorAll(`.data-row[data-strategy-id="${watchlist_id}"]`);
+        
+        rows.forEach(row => {
+            // // Update cells with live data
+            // row.cells[4].textContent = display_name;
+            row.cells[5].textContent = buy_qty;
+            row.cells[6].textContent = buy_price;
+            row.cells[7].textContent = sell_price;
+            row.cells[8].textContent = sell_qty;
+            row.cells[9].textContent = lot_size;
+
+            // Set click handlers for buy and sell price
+            row.cells[6].style.cursor = 'pointer';
+            row.cells[6].onclick = function() {
+                openBuyModalnew(buy_price,  row);
+            };
+
+            row.cells[7].style.cursor = 'pointer';
+            row.cells[7].onclick = function() {
+                openSellModalnew(sell_price, row);
+            };
+        });
+    });
+}
+    // Function to fetch strategy data
+    function fetchStrategyData() {
+        const apiUrl = 'http://192.168.50.82:8010/v1/strategy-watchlist-gp';
+        const headers = {
+            'Accept': 'application/json',
+            'auth-token': '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY'
+        };
+
+        fetch(apiUrl, { headers })
+            .then(response => response.json())
+            .then(data => {
+                userStrategy = data.data; // Store user strategy data
+                populateTable(userStrategy);
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    }
+
+let strategyMap = {};
+
+    // Function to populate the table with fetched data
+function populateTable(userStrategy) {
+    const tableBody = document.querySelector('.multilegTable tbody');
+    tableBody.innerHTML = ''; // Clear existing rows
+ 
+    strategyMap = {}; // Reset the strategyMap
+ 
+    if (userStrategy && Object.keys(userStrategy).length > 0) {
+        for (const key in userStrategy) {
+            const strategyData = userStrategy[key];
+           
+            // Store strategy data by ID for future access
+            strategyData.forEach(rowData => {
+                strategyMap[rowData.id] = rowData.strategy_name; // Store strategy name by strategy ID
+            });
+ 
+            // Add the strategy header row
+            const headerRow = document.createElement('tr');
+            headerRow.style.cursor = 'pointer';
+            headerRow.style.borderBottom = '2px solid grey';
+            headerRow.setAttribute('onclick', `toggleRows('${key}', this)`);
+            headerRow.innerHTML = `
+                <td id="toggleButton-${key}" aria-expanded="false">▼</td>
+                <td colspan="13">
+                    <div class="white-strip">
+                        <span style="font-weight: 650; font-size: 14px;">
+                            StrategyType: ${strategyData[0].strategy_code} |
+                            Symbol: ${strategyData[0].underlying} |
+                            ClientCode: ${strategyData[0].client_id} |
+                            Portfolio: ${strategyData[0].portfolio}
+                        </span>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(headerRow);
+ 
+            // Add data rows for each strategy
+            strategyData.forEach(rowData => {
+                const dataRow = document.createElement('tr');
+                dataRow.classList.add('data-row', key);
+                dataRow.style.display = 'none'; // Initially hidden
+                dataRow.setAttribute('data-strategy-id', rowData.id);
+ 
+                dataRow.innerHTML = `
+                    <td><i class="fas fa-trash-alt" style="height: 14px; width: 14px;"></i></td>
+                    <td>${rowData.client_id}</td>
+                    <td>${rowData.portfolio}</td>
+                    <td><a href="#">${rowData.underlying}</a></td>
+                    <td>${rowData.strategy_name}</td>
+                    <td>0</td> <!-- BuyQty -->
+                    <td>0</td> <!-- BuyPrice -->
+                    <td>0</td> <!-- SellPrice -->
+                    <td>0</td> <!-- SellQty -->
+                    <td>0</td> <!-- Lot Size -->
+                    <td>0</td> <!-- NetQty -->
+                    <td>0</td> <!-- NetShares -->
+                    <td>0</td> <!-- BuyShares -->
+                    <td>0</td> <!-- SellShares -->
+                `;
+                tableBody.appendChild(dataRow);
+            });
+        }
+    } else {
+        const noDataRow = document.createElement('tr');
+        noDataRow.innerHTML = '<td colspan="14">No data available</td>';
+        tableBody.appendChild(noDataRow);
+    }
+}
+// Function to open Buy Modal
+// function openBuyModalnew(buyPrice, row) {
+//         const modal = document.getElementById('buyModalnew');
+//         const buyPriceInput = document.getElementById('newBuyPriceInput');
+
+//         const strategyId = row.getAttribute('data-strategy-id');
+//         const strategyName = strategyMap[strategyId];
+//         console.log("Strategy Name:", strategyName);
+//         if (strategyName) {
+        
+//         const splitStrategyName = strategyName.split('_');
+//         console.log("Split Strategy Name:", splitStrategyName[0]);
+//         } else {
+//         console.log("Strategy Name not found for ID:", strategyId);
+//         }
+
+        
+//         // Set the buy price in the input field if it exists
+//         if (buyPrice) {
+//             buyPriceInput.value = buyPrice;
+//         }
+
+//         // Show the modal
+//         modal.style.display = "block";
+//     }
+async function openBuyModalnew(buyPrice, row) {
+    const modal = document.getElementById('buyModalnew');
+    const buyPriceInput = document.getElementById('newBuyPriceInput');
+
+    if (buyPrice) {
+        buyPriceInput.value = buyPrice;
+    }
+
+    const strategyId = row.getAttribute('data-strategy-id');
+    const strategyName = strategyMap[strategyId];
+    console.log("strategyName",strategyName)
+    
+
+    if (strategyName) {
+        const splitStrategyName = strategyName.split('_');
+        globalStrategyName = splitStrategyName[0];
+
+        if (splitStrategyName[0] === 'STRADDLE') {
+            const symbol = splitStrategyName[1]; 
+            const expiry = splitStrategyName[3]; 
+            const strike = splitStrategyName[2];
+
+            symbols = symbol
+            const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+            const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
+
+            
+            if (!ceLTPData || !peLTPData) {
+                console.error("Failed to get valid LTPs for CE or PE");
+                return;  
+            }
+
+            
+            ceLTPGlobal = Math.floor(ceLTPData.LTP );
+            scripcodeCE = ceLTPData.scripcode; 
+
+            peLTPGlobal = Math.floor(peLTPData.LTP );
+            scripcodePE = peLTPData.scripcode;
+            
+
+            console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
+        }
+        else if(splitStrategyName[0] === 'ICNDBID'){
+            // ICNDBID_NIFTY_25100_25150_25200_25250_PE_CE_10OCT2024_CP1_LIMIT_MARKET_MARKET_MARKET
+            const symbol = splitStrategyName[1]; 
+            const expiry = splitStrategyName[8]; 
+            const strike = splitStrategyName[2];
+            const strike2 = splitStrategyName[3];
+            const strike3 = splitStrategyName[4];
+            const strike4 = splitStrategyName[5];
+
+            symbols = symbol
+            const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+            const peLTPData = await fetchLTP(symbol, expiry, strike2, "PE");
+            const ceLTPDataThird = await fetchLTP(symbol, expiry, strike3, "CE");
+            const peLTPDataFourth = await fetchLTP(symbol, expiry, strike4, "PE");
+
+            
+            if (!ceLTPData || !peLTPData || !ceLTPDataThird || !peLTPDataFourth) {
+                console.error("Failed to get valid LTPs for CE or PE");
+                return;  
+            }
+
+            
+            ceLTPGlobal = Math.floor(ceLTPData.LTP );
+            scripcodeCE = ceLTPData.scripcode; 
+
+            peLTPGlobal = Math.floor(peLTPData.LTP );
+            scripcodePE = peLTPData.scripcode;
+
+            ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP );
+            scripcodeCEThird = ceLTPDataThird.scripcode; 
+
+            peLTPGlobalFourth = Math.floor(peLTPDataFourth.LTP );
+            scripcodePEFourth = peLTPDataFourth.scripcode;
+            
+
+            console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE, ceLTPGlobalThird,scripcodeCEThird,peLTPGlobalFourth,scripcodePEFourth);
+        }
+        else if(splitStrategyName[0] === 'BUTTERFLYBID'){
+            // BUTTERFLYBID_NIFTY_25100_25150_25200_CE_10OCT2024_CP1_LIMIT_MARKET_MARKET
+            const symbol = splitStrategyName[1]; 
+            const expiry = splitStrategyName[6]; 
+            const strike = splitStrategyName[2];
+            const strike2 = splitStrategyName[3];
+            const strike3 = splitStrategyName[4];
+            const opt_type = splitStrategyName[5];
+
+            optType = opt_type;
+
+            symbols = symbol
+            const ceLTPData = await fetchLTP(symbol, expiry, strike, opt_type);
+            const peLTPData = await fetchLTP(symbol, expiry, strike2, opt_type);
+            const ceLTPDataThird = await fetchLTP(symbol, expiry, strike3, opt_type);
+
+            
+            if (!ceLTPData || !peLTPData || !ceLTPDataThird ) {
+                console.error("Failed to get valid LTPs for CE or PE");
+                return;  
+            }
+
+            
+            ceLTPGlobal = Math.floor(ceLTPData.LTP );
+            scripcodeCE = ceLTPData.scripcode; 
+
+            peLTPGlobal = Math.floor(peLTPData.LTP );
+            scripcodePE = peLTPData.scripcode;
+
+            ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP );
+            scripcodeCEThird = ceLTPDataThird.scripcode; 
+
+
+            console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =");
+        }
+    
+
+    }
+
+    modal.style.display = "block";
+}
+// async function openBuyModalnew(buyPrice, row) {
+//     const modal = document.getElementById('buyModalnew');
+//     const buyPriceInput = document.getElementById('newBuyPriceInput');
+
+//     if (buyPrice) {
+//         buyPriceInput.value = buyPrice;
+//     }
+
+//     const strategyId = row.getAttribute('data-strategy-id');
+//     const strategyName = strategyMap[strategyId];
+
+//     if (strategyName) {
+//         const splitStrategyName = strategyName.split('_');
+
+//         if (splitStrategyName[0] === 'STRADDLE') {
+//             const symbol = splitStrategyName[1]; 
+//             const expiry = splitStrategyName[3]; 
+//             const strike = splitStrategyName[2];
+
+//             symbols = symbol
+//             // Fetch LTP for both CE and PE
+//             const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+//             const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
+
+//             // Check if LTPs are valid
+//             if (!ceLTPData || !peLTPData) {
+//                 console.error("Failed to get valid LTPs for CE or PE");
+//                 return;
+//             }
+
+//             ceLTPGlobal = Math.floor(ceLTPData.LTP * 1);
+//             scripcodeCE = ceLTPData.scripcode;
+
+//             peLTPGlobal = Math.floor(peLTPData.LTP * 1);
+//             scripcodePE = peLTPData.scripcode;
+            
+
+//             console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
+//         }
+
+//     else if (splitStrategyName[0] === 'ICNDBID') {
+//             const symbol = splitStrategyName[1]; 
+//             const expiry = splitStrategyName[8]; 
+//             const strike1 = splitStrategyName[2];
+//             const strike2 = splitStrategyName[3];
+//             const strike3 = splitStrategyName[4];
+//             const strike4 = splitStrategyName[5];
+//             const leg1PE = splitStrategyName[6];
+//             const leg2PE = splitStrategyName[6];
+//             const leg1CE = splitStrategyName[7];
+//             const leg2CE = splitStrategyName[7];
+//             symbols = symbol;
+
+//             // Fetch LTP for 2 CE and 2 PE legs
+//             const ceLTPData1 = await fetchLTP(symbol, expiry, strike3, leg1CE);
+//             const peLTPData1 = await fetchLTP(symbol, expiry, strike1, leg1PE);
+
+//             // You may have different strikes for the next legs. This assumes the same strike; update accordingly.
+//             const ceLTPData2 = await fetchLTP(symbol, expiry, strike4, leg2CE);
+//             const peLTPData2 = await fetchLTP(symbol, expiry, strike2, leg2PE);
+
+//             // Validate LTP responses
+//             if (!ceLTPData1 || !peLTPData1 || !ceLTPData2 || !peLTPData2) {
+//                 console.error("Failed to get valid LTPs for one or more legs");
+//                 return;
+//             }
+
+//             // Store all four LTPs and scripcodes
+//             ceLTPGlobal1 = Math.floor(ceLTPData1.LTP);
+//             scripcodeCE1 = ceLTPData1.scripcode;
+
+//             peLTPGlobal1 = Math.floor(peLTPData1.LTP);
+//             scripcodePE1 = peLTPData1.scripcode;
+
+//             ceLTPGlobal2 = Math.floor(ceLTPData2.LTP);
+//             scripcodeCE2 = ceLTPData2.scripcode;
+
+//             peLTPGlobal2 = Math.floor(peLTPData2.LTP);
+//             scripcodePE2 = peLTPData2.scripcode;
+
+//             console.log("Global LTPs stored:");
+//             console.log("Leg 1: CE =", ceLTPGlobal1, "ScripcodeCE1 =", scripcodeCE1);
+//             console.log("Leg 2: PE =", peLTPGlobal1, "ScripcodePE1 =", scripcodePE1);
+//             console.log("Leg 3: CE =", ceLTPGlobal2, "ScripcodeCE2 =", scripcodeCE2);
+//             console.log("Leg 4: PE =", peLTPGlobal2, "ScripcodePE2 =", scripcodePE2);
+//         }
+//     }
+
+//         modal.style.display = "block";
+//     }
+
+// Function to make the LTP API call
+async function fetchLTP(symbol, expiry, strike, optType) {
+    const url = 'http://192.168.50.82:8010/v1/ltp';
+    const token = '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY'; 
+    const requestBody = {
+        symbol: symbol,
+        expiry: expiry,
+        strike: strike,
+        opt_type: optType
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'auth-token': token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+        if (data.status === 'success' && data.LTP !== null && data.LTP !== undefined) {
+            console.log("**", data.LTP);
+            // return data.LTP; // Return the LTP directly
+            return {
+                LTP: data.LTP, 
+                scripcode: data.scripcode 
+            }; 
+        } else {
+            throw new Error(`LTP not available for ${optType}`);
+        }
+    } catch (error) {
+        console.error(`Error fetching LTP for ${optType}:`, error);
+        return null;
+    }
+}
+
+function closeBuyModalnew() {
+    const modal = document.getElementById('buyModalnew');
+    modal.style.display = 'none';
+}
+
+
+document.getElementById('closeBuyModalBtn').onclick = function() {
+    closeBuyModalnew();
+}
+
+
+async function openSellModalnew(sellPrice, row) {
+    const modal = document.getElementById('sellModalnew');
+    const sellPriceInput = document.getElementById('newSellPriceInput');
+
+    if (sellPrice) {
+        sellPriceInput.value = sellPrice;
+    }
+
+    const strategyId = row.getAttribute('data-strategy-id');
+    const strategyName = strategyMap[strategyId];
+
+    if (strategyName) {
+        const splitStrategyName = strategyName.split('_');
+        globalStrategyName = splitStrategyName[0];
+
+        if (splitStrategyName[0] === 'STRADDLE') {
+            const symbol = splitStrategyName[1]; 
+            const expiry = splitStrategyName[3]; 
+            const strike = splitStrategyName[2];
+
+            symbols = symbol;
+            const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+            const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
+
+            if (!ceLTPData || !peLTPData) {
+                console.error("Failed to get valid LTPs for CE or PE");
+                return;
+            }
+
+            ceLTPGlobal = Math.floor(ceLTPData.LTP);
+            scripcodeCE = ceLTPData.scripcode;
+
+            peLTPGlobal = Math.floor(peLTPData.LTP);
+            scripcodePE = peLTPData.scripcode;
+
+            console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
+
+        } else if (splitStrategyName[0] === 'ICNDBID') {
+            const symbol = splitStrategyName[1]; 
+            const expiry = splitStrategyName[8];
+            const strike = splitStrategyName[2];
+            const strike2 = splitStrategyName[3];
+            const strike3 = splitStrategyName[4];
+            const strike4 = splitStrategyName[5];
+
+            symbols = symbol;
+            const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+            const peLTPData = await fetchLTP(symbol, expiry, strike2, "PE");
+            const ceLTPDataThird = await fetchLTP(symbol, expiry, strike3, "CE");
+            const peLTPDataFourth = await fetchLTP(symbol, expiry, strike4, "PE");
+
+            if (!ceLTPData || !peLTPData || !ceLTPDataThird || !peLTPDataFourth) {
+                console.error("Failed to get valid LTPs for CE or PE");
+                return;
+            }
+
+            ceLTPGlobal = Math.floor(ceLTPData.LTP);
+            scripcodeCE = ceLTPData.scripcode;
+
+            peLTPGlobal = Math.floor(peLTPData.LTP);
+            scripcodePE = peLTPData.scripcode;
+
+            ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP);
+            scripcodeCEThird = ceLTPDataThird.scripcode;
+
+            peLTPGlobalFourth = Math.floor(peLTPDataFourth.LTP);
+            scripcodePEFourth = peLTPDataFourth.scripcode;
+
+            console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE, ceLTPGlobalThird, scripcodeCEThird, peLTPGlobalFourth, scripcodePEFourth);
+
+        } else if (splitStrategyName[0] === 'BUTTERFLYBID') {
+            const symbol = splitStrategyName[1];
+            const expiry = splitStrategyName[6];
+            const strike = splitStrategyName[2];
+            const strike2 = splitStrategyName[3];
+            const strike3 = splitStrategyName[4];
+            const opt_type = splitStrategyName[5];
+
+            optType = opt_type;
+
+            symbols = symbol;
+            const ceLTPData = await fetchLTP(symbol, expiry, strike, opt_type);
+            const peLTPData = await fetchLTP(symbol, expiry, strike2, opt_type);
+            const ceLTPDataThird = await fetchLTP(symbol, expiry, strike3, opt_type);
+
+            if (!ceLTPData || !peLTPData || !ceLTPDataThird) {
+                console.error("Failed to get valid LTPs for CE or PE");
+                return;
+            }
+
+            ceLTPGlobal = Math.floor(ceLTPData.LTP);
+            scripcodeCE = ceLTPData.scripcode;
+
+            peLTPGlobal = Math.floor(peLTPData.LTP);
+            scripcodePE = peLTPData.scripcode;
+
+            ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP);
+            scripcodeCEThird = ceLTPDataThird.scripcode;
+
+            console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", peLTPGlobal, ceLTPGlobalThird, scripcodeCEThird);
+        }
+    }
+
+    modal.style.display = "block";
+}
+
+function closeSellModalnew() {
+    const modal = document.getElementById('sellModalnew');
+    modal.style.display = 'none';
+}
+
+document.getElementById('closeSellModalBtn').onclick = function() {
+    closeSellModalnew();
+}
+
+window.onclick = function(event) {
+    const buyModal = document.getElementById('buyModalnew');
+    const sellModal = document.getElementById('sellModalnew');
+    if (event.target === buyModal || event.target === sellModal) {
+        buyModal.style.display = 'none';
+        sellModal.style.display = 'none';
+    }
+}
+
+document.getElementById('closeSellModalBtn').addEventListener('click', closeSellModalnew);
+    openWebSocket();
+    fetchStrategyData();
+});
+
+function toggleRows(key, row) {
+    // console.log(`Toggling rows for key: ${key}`);
+    const rows = document.querySelectorAll(`.data-row.${key}`);
+    const toggleButton = row.querySelector(`#toggleButton-${key}`);
+
+    rows.forEach(dataRow => {
+        dataRow.style.display = (dataRow.style.display === 'none' || dataRow.style.display === '') ? 'table-row' : 'none';
+
+        // console.log('Row data:', {
+        //     watchlistId: dataRow.getAttribute('data-strategy-id'),
+        //     strategyName: dataRow.getAttribute('data-strategy-name'),
+        //     cells: Array.from(dataRow.cells).map(cell => cell.textContent)
+        // });
+        
+        if (dataRow.style.display === 'table-row') {
+            const watchlistId = dataRow.getAttribute('data-strategy-id');
+            const message = JSON.stringify({ watchlist_id: watchlistId });
+            ws.send(message);
+            
+        }
+    });
+
+    if (toggleButton.getAttribute('aria-expanded') === 'false') {
+        toggleButton.setAttribute('aria-expanded', 'true');
+        toggleButton.textContent = '▲';
+    } else {
+        toggleButton.setAttribute('aria-expanded', 'false');
+        toggleButton.textContent = '▼';
+    }
+}
+</script>
+
+{% endblock %}

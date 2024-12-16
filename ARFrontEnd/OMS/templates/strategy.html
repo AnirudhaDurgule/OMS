@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .button {
+            padding: 5px 10px;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .start-btn {
+            background-color: #4CAF50; /* Green */
+        }
+
+        .stop-btn {
+            background-color: #f44336; /* Red */
+        }
+
+        .status-cell {
+            color: #555;
+        }
+
+        .strategy-action button {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Strategy Management</h1>
+
+    <table id="strategyTable">
+        <thead>
+            <tr>
+                <th>Algo ID</th>
+                <th>Client ID</th>
+                <th>Strategy Name</th>
+                <th>Start</th>
+                <th>Stop</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="strategy-body">
+            <tr>
+                <td colspan="6">Loading...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        // Function to start a strategy
+        function startStrategy(algoID) {
+            console.log(`Starting strategy with Algo ID: ${algoID}`);
+            // Add logic to start the strategy here
+        }
+
+        // Function to stop a strategy
+        function stopStrategy(algoID) {
+            console.log(`Stopping strategy with Algo ID: ${algoID}`);
+            // Add logic to stop the strategy here
+        }
+
+        // Function to display strategies in the table
+        function displayStrategies(strategies) {
+            const strategyBody = document.getElementById('strategy-body');
+
+            // Clear any existing content
+            strategyBody.innerHTML = '';
+
+            // Loop through the strategies data and create rows for each strategy
+            strategies.forEach(strategy => {
+                const row = `
+                    <tr data-strategy-id="${strategy.algoID}">
+                        <td>${strategy.algoID}</td>
+                        <td>${strategy.clientID}</td>
+                        <td>${strategy.strategyID}</td>
+                        <td class="strategy-action">
+                            <button class="button start-btn" onclick="startStrategy('${strategy.algoID}')">Start</button>
+                        </td>
+                        <td class="strategy-action">
+                            <button class="button stop-btn" onclick="stopStrategy('${strategy.algoID}')">Stop</button>
+                        </td>
+                        <td class="status-cell">Inactive</td>
+                    </tr>
+                `;
+
+                strategyBody.innerHTML += row;
+            });
+
+            // Handle case where there are no strategies
+            if (strategies.length === 0) {
+                strategyBody.innerHTML = '<tr><td colspan="6">No strategies available</td></tr>';
+            }
+        }
+
+        fetch('/strategy-list/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayStrategies(data.data); // Note that `data.data` is the array of strategies
+                } else {
+                    console.error('Failed to fetch strategies');
+                    document.getElementById('strategy-body').innerHTML = '<tr><td colspan="6">Error fetching strategies</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('strategy-body').innerHTML = '<tr><td colspan="6">Error fetching strategies</td></tr>';
+            });
+    </script>
+
+</body>
+</html>
