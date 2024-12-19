@@ -933,6 +933,7 @@
             const closeBtn = clientPositionModal.querySelector('.close');
         
             clientPositionBtn.addEventListener('click', () => {
+                fetchTradeBook()
                 openModal('clientPositionModal');
             });
         
@@ -1595,65 +1596,65 @@ function goToPreviousTradeBookPage() {
 // const lotSizeInput = document.getElementById('lotSizeInput');
 // console.log(qtyInput);
 // console.log(lotSizeInput);
-function fetchStrategyNetPosition() {
-    fetch('/strategy_net_position_view/')
-        .then(response => response.json())
-        .then(data => {
-            if (data.net_position && Array.isArray(data.net_position)) {
-                strategyNetPositionData = data.net_position;
-                renderPaginatedStrategyPosition(); // Call the render function
-            } else {
-                document.getElementById('strategy-position-body').innerHTML = '<tr><td colspan="4">No strategy net position data available</td></tr>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching Strategy Net Position:', error);
-            document.getElementById('strategy-position-body').innerHTML = '<tr><td colspan="4">Error fetching strategy net position data</td></tr>';
-        });
-}
-
-// Render paginated strategy net position
-function renderPaginatedStrategyPosition() {
-    const strategyPositionBody = document.getElementById('strategy-position-body');
-    const pageNumberElement = document.getElementById('strategy-position-page-number');
-
-    // Ensure the page number element exists before updating it
-    if (!pageNumberElement) {
-        console.error('Pagination element not found');
-        return;  // Stop execution if the pagination element is missing
+    function fetchStrategyNetPosition() {
+        fetch('/strategy_net_position_view/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.net_position && Array.isArray(data.net_position)) {
+                    strategyNetPositionData = data.net_position;
+                    renderPaginatedStrategyPosition(); // Call the render function
+                } else {
+                    document.getElementById('strategy-position-body').innerHTML = '<tr><td colspan="4">No strategy net position data available</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching Strategy Net Position:', error);
+                document.getElementById('strategy-position-body').innerHTML = '<tr><td colspan="4">Error fetching strategy net position data</td></tr>';
+            });
     }
 
-    const fragment = document.createDocumentFragment();  // Use a document fragment for batch updates
+    // Render paginated strategy net position
+    function renderPaginatedStrategyPosition() {
+        const strategyPositionBody = document.getElementById('strategy-position-body');
+        const pageNumberElement = document.getElementById('strategy-position-page-number');
 
-    // Calculate the start index of the current page
-    const startIndex = (currentStrategyPositionPage - 1) * rowsPerPageStrategyPosition;
-    const paginatedData = strategyNetPositionData.slice(startIndex, startIndex + rowsPerPageStrategyPosition);
+        // Ensure the page number element exists before updating it
+        if (!pageNumberElement) {
+            console.error('Pagination element not found');
+            return;  // Stop execution if the pagination element is missing
+        }
 
-    // Loop through paginated data and create rows
-    paginatedData.forEach(order => {
-        let netQuantity = order.netQuantity;
-        let netValue = order.netValue;
-        let netPrice = (netQuantity !== 0) ? (netValue / netQuantity).toFixed(2) : 0;
+        const fragment = document.createDocumentFragment();  // Use a document fragment for batch updates
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${order.instrumentName}</td>
-            <td>${netQuantity}</td>
-            <td>${netValue.toFixed(2)}</td>
-            <td>${netPrice}</td>
-        `;
-        fragment.appendChild(row);
-    });
+        // Calculate the start index of the current page
+        const startIndex = (currentStrategyPositionPage - 1) * rowsPerPageStrategyPosition;
+        const paginatedData = strategyNetPositionData.slice(startIndex, startIndex + rowsPerPageStrategyPosition);
 
-    // Clear previous table content and append new content
-    strategyPositionBody.innerHTML = '';
-    strategyPositionBody.appendChild(fragment);
+        // Loop through paginated data and create rows
+        paginatedData.forEach(order => {
+            let netQuantity = order.netQuantity;
+            let netValue = order.netValue;
+            let netPrice = (netQuantity !== 0) ? (netValue / netQuantity).toFixed(2) : 0;
 
-    pageNumberElement.innerText = currentStrategyPositionPage;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${order.instrumentName}</td>
+                <td>${netQuantity}</td>
+                <td>${netValue.toFixed(2)}</td>
+                <td>${netPrice}</td>
+            `;
+            fragment.appendChild(row);
+        });
 
-    // Update pagination controls if necessary
-    updateStrategyPaginationControls();
-}
+        // Clear previous table content and append new content
+        strategyPositionBody.innerHTML = '';
+        strategyPositionBody.appendChild(fragment);
+
+        pageNumberElement.innerText = currentStrategyPositionPage;
+
+        // Update pagination controls if necessary
+        updateStrategyPaginationControls();
+    }
 
 // Pagination controls for Strategy Position
 function goToNextStrategyPositionPage() {
@@ -2512,7 +2513,7 @@ function cancelAll() {
     });
 </script> -->
 <script>
-    const token = '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY';
+    const token = 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH';
 
     function loadSymbols() {
         fetch('/api/symbols/', {
@@ -2765,11 +2766,11 @@ function cancelAll() {
                 }
 
                 // Submit the strategy payload
-                fetch('http://192.168.50.82:8010/v1/strategy-watchlist', {
+                fetch('http://192.168.112.81:8010/v1/strategy-watchlist', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'auth-token': '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY'
+                        'auth-token': 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH'
                     },
                     body: JSON.stringify(strategyData)
                 })
@@ -2800,7 +2801,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     
     function openWebSocket() {
-        ws = new WebSocket('ws://192.168.50.82:8012/ws/data');
+        ws = new WebSocket('ws://192.168.112.81:8001/ws/data');
 
         ws.onopen = () => console.log('WebSocket connected');
         ws.onmessage = handleWebSocketMessage;
@@ -2841,16 +2842,17 @@ document.addEventListener("DOMContentLoaded", function() {
 }
     // Function to fetch strategy data
     function fetchStrategyData() {
-        const apiUrl = 'http://192.168.50.82:8010/v1/strategy-watchlist-gp';
+        const apiUrl = 'http://192.168.112.81:8010/v1/strategy-watchlist-gp';
         const headers = {
             'Accept': 'application/json',
-            'auth-token': '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY'
+            'auth-token': 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH'
         };
 
         fetch(apiUrl, { headers })
             .then(response => response.json())
             .then(data => {
                 userStrategy = data.data; // Store user strategy data
+                print("@@@@", userStrategy)
                 populateTable(userStrategy);
             })
             .catch(error => console.error('Error fetching data:', error));
@@ -3164,8 +3166,8 @@ async function openBuyModalnew(buyPrice, row) {
 
 // Function to make the LTP API call
 async function fetchLTP(symbol, expiry, strike, optType) {
-    const url = 'http://192.168.50.82:8010/v1/ltp';
-    const token = '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY'; 
+    const url = 'http://192.168.112.81:8010/v1/ltp';
+    const token = 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH'; 
     const requestBody = {
         symbol: symbol,
         expiry: expiry,
@@ -3349,11 +3351,12 @@ function toggleRows(key, row) {
     rows.forEach(dataRow => {
         dataRow.style.display = (dataRow.style.display === 'none' || dataRow.style.display === '') ? 'table-row' : 'none';
 
-        // console.log('Row data:', {
-        //     watchlistId: dataRow.getAttribute('data-strategy-id'),
-        //     strategyName: dataRow.getAttribute('data-strategy-name'),
-        //     cells: Array.from(dataRow.cells).map(cell => cell.textContent)
-        // });
+        console.log('Row data:', {
+            watchlistId: dataRow.getAttribute('data-strategy-id'),
+            strategyName: dataRow.getAttribute('data-strategy-name'),
+            cells: Array.from(dataRow.cells).map(cell => cell.textContent),
+            dataRow
+        });
         
         if (dataRow.style.display === 'table-row') {
             const watchlistId = dataRow.getAttribute('data-strategy-id');

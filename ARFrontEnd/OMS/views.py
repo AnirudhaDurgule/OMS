@@ -9,8 +9,6 @@ import json
 import requests
 from django.views.decorators.csrf import csrf_exempt
 
-
-
 def home(request):
     if not request.session.get('is_logged_in'):
         return redirect('ulogin')
@@ -51,7 +49,7 @@ def ulogin(request):
                         reset_response = requests.get(reset_password_url, headers=headers, json=reset_data)
                         reset_data_response = reset_response.json()
 
-                        if reset_data_response.get("type") == "success" and reset_data_response.get("resetPassword") == 1:
+                        if reset_data_response.get("type") == "success" and reset_data_response.get("resetPassword") == False:
                             return redirect('password')
                         else:
                             request.session['mobile_number'] = mobile_number
@@ -90,19 +88,19 @@ def verify_password(request):
         print("Postmethhod is calleds")
         old_password = request.POST.get('oldPassword')
         new_password = request.POST.get('newPassword')
+        client_code = request.session.get("mobile_number")
 
         url = 'http://192.168.50.35:5000/verifyOTP'
         headers = {
             'Content-Type': 'application/json',
-            'Cookie': request.COOKIES.get('sessionid')
+            'Cookie': f'sessionid={request.COOKIES.get("sessionid")}'
         }
         data = {
+            "clientCode": client_code,
             "password": old_password,
-            "newPasword": new_password,
-            "clientCode":request.session["mobile_number"]
+            "newPasword": new_password
         }
-
-        print(data)
+        print("Payload sent to API:", data)
 
         try:
             response = requests.post(url, headers=headers, json=data)
@@ -113,14 +111,13 @@ def verify_password(request):
                     messages.success(request, "Password successfully changed.")
                     return redirect('home')
                 else:
-                    messages.error(request, "Failed to change password. Please try again.")
+                    messages.error(request, response_data.get("message", "Failed to change password. Please try again."))
             else:
                 messages.error(request, "Failed to change password. Please try again.")
         except requests.exceptions.RequestException as e:
             print(f"Request failed: {e}")
             messages.error(request, "An error occurred. Please try again later.")
-    print("Get Method is calleds")
-    
+
     return render(request, 'verify_password.html')
 
 def password(request):
@@ -164,6 +161,8 @@ def password(request):
                     return JsonResponse({"status": "success", "message": "Password successfully verified."})
                 else:
                     # API responded but with an error
+                    print("@@@@", response_data)
+                    return redirect('verify_password')
                     return JsonResponse({"status": "error", "message": response_data.get("message", "Verification failed.")}, status=400)
             else:
                 # Handle non-200 status codes
@@ -175,145 +174,6 @@ def password(request):
 
     # Render the password page for GET requests
     return render(request, 'password.html')
-# def password(request):
-#     if request.method == 'POST':
-#         try:
-#             # Extract data from POST request
-#             password = request.POST.get('password', '')
-#             clientCode = request.POST.get('password', '')
-
-#             # API URL for verifying the password
-#             url = 'http://192.168.50.35:5000/verifyOTP'
-
-#             # Headers for the API request
-#             headers = {
-#                 'Content-Type': 'application/json',
-#                 'Cookie': f"sessionid={request.COOKIES.get('sessionid')}",
-#             }
-
-#             # Payload for the API request
-#             payload = {
-#                 "clientCode": clientCode,
-#                 "password": password,
-#                 "newPasword": ""
-#             }
-
-#             # Make the API request using the requests library
-#             response = requests.post(url, headers=headers, json=payload)
-
-#             # Check the response status code
-#             if response.status_code == 200:
-#                 response_data = response.json()
-#                 if response_data.get("type") == "success":
-#                     # Success: Return success response
-#                     request.session['is_logged_in'] = True
-#                     return JsonResponse({"status": "success", "message": "Password successfully verified."})
-#                 else:
-#                     # API responded but with an error
-#                     return JsonResponse({"status": "error", "message": response_data.get("message", "Verification failed.")}, status=400)
-#             else:
-#                 # Handle non-200 status codes
-#                 return JsonResponse({"status": "error", "message": "Failed to verify password. API error."}, status=500)
-#         except Exception as e:
-#             # Handle exceptions such as network issues
-#             print(f"Error during API call: {e}")
-#             return JsonResponse({"status": "error", "message": "An error occurred while processing your request."}, status=500)
-
-#     # Render the password page for GET requests
-#     return render(request, 'password.html')
-
-# def password(request):
-#     if request.method == 'POST':
-#         new_password = request.POST.get('newPassword')
-        
-#         try:
-#             # API URL for verifying the password
-#             url = 'http://192.168.50.35:5000/verifyOTP'
-
-#             # Headers for the API request
-#             headers = {
-#                 'Content-Type': 'application/json',
-#                 'Cookie': f"sessionid={request.COOKIES.get('sessionid')}",  # Include session ID from cookies
-#             }
-
-#             # Payload for the API request
-#             payload = {
-#                 "clientCode":request.session["mobile_number"],
-#                 "password": password,
-#                 "newPasword": ""  # As per the requirement
-#             }
-
-#             # Make the API request using the requests library
-#             response = requests.post(url, headers=headers, json=payload)
-
-#             # Check the response status code
-#             if response.status_code == 200:
-#                 response_data = response.json()
-#                 if response_data.get("type") == "success":
-#                     # Success: Return success response
-#                     request.session['is_logged_in'] = True
-#                     return JsonResponse({"status": "success", "message": "Password successfully verified."})
-#                 else:
-#                     # API responded but with an error
-#                     return JsonResponse({"status": "error", "message": "Password verification failed."}, status=400)
-#             else:
-#                 # Handle non-200 status codes
-#                 return JsonResponse({"status": "error", "message": "Failed to verify password. API error."}, status=500)
-#         except Exception as e:
-#             # Handle exceptions such as network issues
-#             print(f"Error during API call: {e}")
-#             return JsonResponse({"status": "error", "message": "An error occurred while processing your request."}, status=500)
-
-#     # Render the password page for GET requests
-#     return render(request, 'password.html')
-# def password(request):
-#     if request.method == 'POST':
-#         # Get the password from the form input
-#         password = request.POST.get('password')
-
-#         # API URL for verifying the OTP
-#         url = 'http://192.168.50.35:5000/verifyOTP'
-#         headers = {
-#             'Content-Type': 'application/json',
-#             'Cookie': request.COOKIES.get('sessionid')  # Using session ID from cookies
-#         }
-#         data = {
-#             "clientCode":request.session["mobile_number"],
-#             "password": password,     # Send the entered password
-#             "newPasword": ""         # Send "newPassword" as an empty string as per the requirement
-#         }
-
-#         try:
-#             # Make the POST request to the API
-#             response = requests.post(url, headers=headers, json=data)
-#             if response.status_code == 200:
-#                 response_data = response.json()
-                
-#                 # Check if the response type is 'success'
-#                 if response_data.get("type") == "success":
-#                     # Success: redirect to home page
-#                     request.session['is_logged_in'] = True
-#                     # request.session['mobile_number'] = mobile_number
-#                     messages.success(request, "Password successfully verified.")
-#                     return redirect("home")
-#                     # return redirect('home')
-#                 else:
-#                     # API responded but with an error type
-#                     messages.error(request, "Password verification failed. Please try again.")
-#                     return redirect('verify_password')
-#             else:
-#                 # Failed to get a valid response from the API
-#                 messages.error(request, "Failed to verify password. Please try again.")
-#                 return redirect('verify_password')
-
-#         except requests.exceptions.RequestException as e:
-#             # Handle request exceptions like network issues
-#             print(f"Request failed: {e}")
-#             messages.error(request, "An error occurred. Please try again later.")
-#             return redirect('verify_password')
-
-#     # Render the password page for GET request
-#     return render(request, 'password.html')
     
 def home_view(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -324,16 +184,30 @@ def home_view(request):
     return render(request, 'home.html')
 
 def order_book_view(request):
-    api_url = 'http://192.168.50.35:5000/api/orderBook/'
+    api_url = 'http://192.168.50.35:5000/api/orderBook/'  # Ensure this is the correct endpoint
     sessionid = request.COOKIES.get('sessionid')
+    client_code = request.session.get("mobile_number")  # Assuming client_code is stored in session
+    
+    # Log session details
+    print(f"Session ID: {sessionid}")
+    print(f"Client Code: {client_code}")
+
     if not sessionid:
         return JsonResponse({'error': 'Session ID not found in cookies'}, status=400)
 
+    # Prepare headers, cookies, and payload
     cookies = {'sessionid': sessionid}
-    # cookies = {'sessionid': 'ulfl5bco42ko7hfph3b5ktkhhc8ceq5m'}
+    headers = {'Content-Type': 'application/json'}
+    payload = {'clientCode': client_code}
 
     try:
-        response = requests.post(api_url, cookies=cookies)
+        # Use POST request (adjust to GET if needed)
+        response = requests.post(api_url, cookies=cookies, json=payload, headers=headers)
+        
+        # Log the API response details
+        print(f"Response Status Code: {response.status_code}")
+        print(f"Response Text: {response.text}")
+
         if response.status_code == 200:
             data = response.json()
             if data.get("type") == "success":
@@ -341,20 +215,24 @@ def order_book_view(request):
             else:
                 return JsonResponse({'error': 'Failed to fetch order book data'})
         else:
-            return JsonResponse({'error': 'Error fetching data from API'}, status=500)
+            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=500)
     except requests.exceptions.RequestException as e:
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
 
 def trade_book_view(request):
     api_url = 'http://192.168.50.35:5000/api/strategyTradeBook/'
     sessionid = request.COOKIES.get('sessionid')
+    client_code = request.session.get("mobile_number")  # Assuming clientCode is stored in session
+
     if not sessionid:
         return JsonResponse({'error': 'Session ID not found in cookies'}, status=400)
 
     cookies = {'sessionid': sessionid}
+    headers = {'Content-Type': 'application/json'}
+    payload = {'clientCode': client_code}
 
     try:
-        response = requests.post(api_url, cookies=cookies)
+        response = requests.post(api_url, cookies=cookies, json=payload, headers=headers)
         if response.status_code == 200:
             data = response.json()
             if data.get("type") == "success":
@@ -362,66 +240,69 @@ def trade_book_view(request):
             else:
                 return JsonResponse({'error': 'Failed to fetch trade book data'})
         else:
-            return JsonResponse({'error': 'Error fetching data from API'}, status=500)
+            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=500)
     except requests.exceptions.RequestException as e:
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
     
 def net_position_view(request):
     api_url = 'http://192.168.50.35:5000/api/strategyNetPosition/'
     sessionid = request.COOKIES.get('sessionid')
+    client_code = request.session.get("mobile_number")  # Assuming clientCode is stored in session
+
     if not sessionid:
         return JsonResponse({'error': 'Session ID not found in cookies'}, status=400)
 
     cookies = {'sessionid': sessionid}
+    headers = {'Content-Type': 'application/json'}
+    payload = {'clientCode': client_code}
 
     try:
-        response = requests.post(api_url, cookies=cookies)
+        response = requests.post(api_url, cookies=cookies, json=payload, headers=headers)
         if response.status_code == 200:
             data = response.json()
-
-
             if data.get("type") == "success":
-                
                 net_position = json.loads(data['net_position'])
                 return JsonResponse({'net_position': net_position})
             else:
                 return JsonResponse({'error': 'Failed to fetch net position data'})
         else:
-            return JsonResponse({'error': 'Error fetching data from API'}, status=500)
+            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=500)
     except requests.exceptions.RequestException as e:
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
-    
+
+
 def strategy_net_position_view(request):
     api_url = 'http://192.168.50.35:5000/api/strategyNetPosition/'
     sessionid = request.COOKIES.get('sessionid')
+    client_code = request.session.get("mobile_number")  # Assuming clientCode is stored in session
+
     if not sessionid:
         return JsonResponse({'error': 'Session ID not found in cookies'}, status=400)
 
     cookies = {'sessionid': sessionid}
+    headers = {'Content-Type': 'application/json'}
+    payload = {'clientCode': client_code}
 
     try:
-        response = requests.post(api_url, cookies=cookies)
+        response = requests.post(api_url, cookies=cookies, json=payload, headers=headers)
         if response.status_code == 200:
             data = response.json()
-
-
             if data.get("type") == "success":
-                
                 net_position = json.loads(data['net_position'])
                 return JsonResponse({'net_position': net_position})
             else:
                 return JsonResponse({'error': 'Failed to fetch net position data'})
         else:
-            return JsonResponse({'error': 'Error fetching data from API'}, status=500)
+            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=500)
     except requests.exceptions.RequestException as e:
-        return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
-    
-TOKEN = '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY'
+        return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)  
 
+    
+TOKEN = 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH'
 
 def get_symbols(request):
     try:
-        response = requests.get('http://192.168.50.82:8010/v1/symbol', headers={
+        response = requests.get('http://192.168.112.81:8010/v1/symbol', headers={
             'auth-token': TOKEN,
             'Content-Type': 'application/json'
         })
@@ -435,7 +316,7 @@ def get_symbols(request):
 def get_expiry(request):
     symbol = request.GET.get('symbol')
     try:
-        response = requests.get(f'http://192.168.50.82:8010/v1/expiry?sym={symbol}&opt_type=opt', headers={
+        response = requests.get(f'http://192.168.112.81:8010/v1/expiry?sym={symbol}&opt_type=opt', headers={
             'auth-token': TOKEN,
             'Content-Type': 'application/json'
         })
@@ -450,7 +331,7 @@ def get_strikes(request):
     symbol = request.GET.get('symbol')
     expiry = request.GET.get('expiry')
     try:
-        response = requests.get(f'http://192.168.50.82:8010/v1/strikes?sym={symbol}&exp={expiry}', headers={
+        response = requests.get(f'http://192.168.112.81:8010/v1/strikes?sym={symbol}&exp={expiry}', headers={
             'auth-token': TOKEN,
             'Content-Type': 'application/json'
         })
@@ -497,11 +378,11 @@ def add_strategy(request):
             }
 
 
-            url = 'http://192.168.50.82:8010/v1/strategy-watchlist'
+            url = 'http://192.168.112.81:8010/v1/strategy-watchlist'
             headers = {
                 'Accept': 'application/json, text/plain, */*',
                 'Content-Type': 'application/json',
-                'auth-token': '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY'
+                'auth-token': 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH'
             }
 
             response = requests.post(url, headers=headers, json=payload)
@@ -520,7 +401,7 @@ def add_strategy(request):
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
 def strategy_watchlist(request):
-    api_url = 'http://192.168.50.82:8010/v1/strategy-watchlist-gp'
+    api_url = 'http://192.168.112.81:8010/v1/strategy-watchlist-gp'
 
     headers = {
         'Accept': 'application/json, text/plain, */*',
@@ -529,7 +410,7 @@ def strategy_watchlist(request):
         'Origin': 'http://172.16.47.87:5173',
         'Referer': 'http://172.16.47.87:5173/',
         'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
-        'auth-token': '2cv4U3qi1jNvbVZdT1kMRMsZmLysV3OY'
+        'auth-token': 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH'
     }
 
     try:
@@ -583,7 +464,7 @@ def cancel_order(request):
 
 
 def get_ltpPrice(sym, expiry, strike, opt_type):
-    url = "http://192.168.50.82:8010/v1/ltp"
+    url = "http://192.168.112.81:8010/v1/ltp"
 
     # payload = json.dumps({
     # "symbol": "NIFTY",
