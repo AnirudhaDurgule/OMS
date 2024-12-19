@@ -10,6 +10,7 @@ import requests
 from django.views.decorators.csrf import csrf_exempt
 
 def home(request):
+    print(request.session) 
     if not request.session.get('is_logged_in'):
         return redirect('ulogin')
 
@@ -85,7 +86,6 @@ def ulogin(request):
 
 def verify_password(request):
     if request.method == 'POST':
-        print("Postmethhod is calleds")
         old_password = request.POST.get('oldPassword')
         new_password = request.POST.get('newPassword')
         client_code = request.session.get("mobile_number")
@@ -125,12 +125,12 @@ def password(request):
         try:
             # Parse the incoming JSON data
             data = json.loads(request.body)
-
-            password = data.get('password', '')
-            clientCode = data.get('clientCode', '')
+            client_code = data.get('clientCode')
+            password = data.get('password')
+            new_password = data.get('newPasword', "")
 
             # Check if clientCode and password are provided
-            if not password or not clientCode:
+            if not client_code or not password:
                 return JsonResponse({"status": "error", "message": "Client code or password is missing."}, status=400)
 
             # API URL for verifying the password
@@ -139,20 +139,20 @@ def password(request):
             # Headers for the API request
             headers = {
                 'Content-Type': 'application/json',
-                'Cookie': f"sessionid={request.COOKIES.get('sessionid')}",
+                'Cookie': request.COOKIES.get('sessionid', ''),
             }
 
             # Payload for the API request
             payload = {
-                "clientCode": clientCode,
+                "clientCode": client_code,
                 "password": password,
-                "newPasword": ""  # You can update this if needed
+                "newPasword": new_password  # Send as received or leave empty
             }
 
             # Make the API request using the requests library
             response = requests.post(url, headers=headers, json=payload)
 
-            # Check the response status code
+            # Handle the API response
             if response.status_code == 200:
                 response_data = response.json()
                 if response_data.get("type") == "success":
@@ -161,19 +161,98 @@ def password(request):
                     return JsonResponse({"status": "success", "message": "Password successfully verified."})
                 else:
                     # API responded but with an error
-                    print("@@@@", response_data)
-                    return redirect('verify_password')
                     return JsonResponse({"status": "error", "message": response_data.get("message", "Verification failed.")}, status=400)
             else:
                 # Handle non-200 status codes
-                return JsonResponse({"status": "error", "message": "Failed to verify password. API error."}, status=500)
+                return JsonResponse({"status": "error", "message": "Failed to verify password. API error."}, status=response.status_code)
         except Exception as e:
-            # Handle exceptions such as network issues
+            # Handle exceptions
             print(f"Error during API call: {e}")
             return JsonResponse({"status": "error", "message": "An error occurred while processing your request."}, status=500)
 
     # Render the password page for GET requests
     return render(request, 'password.html')
+
+def get_market_depth(request):
+    if request.method == "GET":
+        # Get tokenNumber from query parameters
+        token_number = request.GET.get("tokenNumber")
+        if not token_number:
+            return JsonResponse({"status": "error", "message": "Token number is required"})
+
+        url = "http://192.168.50.35:5000/api/getPriceSnapshot/"
+        headers = {
+            "Content-Type": "application/json",
+            "Cookie": "sessionid=76zbtd0v107wz6id6hcc983ya0647ftf",  # Replace with dynamic sessionid if needed
+        }
+        payload = {"tokenNumber": int(token_number)}
+        
+        try:
+            response = requests.get(url, headers=headers, json=payload)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("type") == "success":
+                    return JsonResponse({"status": "success", "result": data["result"]})
+                else:
+                    return JsonResponse({"status": "error", "message": "Data Not Available for This Provided TokenNumber."})
+            else:
+                return JsonResponse({"status": "error", "message": "Failed to fetch data from API"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+    else:
+        return JsonResponse({"status": "error", "message": "Invalid request method"})
+# def password(request):
+#     if request.method == 'POST':
+#         try:
+#             # Parse the incoming JSON data
+#             data = json.loads(request.body)
+#             client_code = data.get('clientCode')
+#             password = data.get('password')
+#             new_password = data.get('newPasword', "")
+
+#             # Check if clientCode and password are provided
+#             if not password or not client_code:
+#                 return JsonResponse({"status": "error", "message": "Client code or password is missing."}, status=400)
+
+#             # API URL for verifying the password
+#             url = 'http://192.168.50.35:5000/verifyOTP'
+
+#             # Headers for the API request
+#             headers = {
+#                 'Content-Type': 'application/json',
+#                 'Cookie': f"sessionid={request.COOKIES.get('sessionid')}",
+#             }
+
+#             # Payload for the API request
+#             payload = {
+#                 "clientCode": client_code,
+#                 "password": password,
+#                 "newPasword": new_password  # You can update this if needed
+#             }
+
+#             # Make the API request using the requests library
+#             response = requests.post(url, headers=headers, json=payload)
+
+#             # Check the response status code
+#             if response.status_code == 200:
+#                 response_data = response.json()
+#                 if response_data.get("type") == "success":
+#                     # Success: Return success response
+#                     request.session['is_logged_in'] = True
+#                     return JsonResponse({"status": "success", "message": "Password successfully verified."})
+#                 else:
+#                     # API responded but with an error
+#                     return JsonResponse({"status": "error", "message": response_data.get("message", "Verification failed.")}, status=400)
+#             else:
+#                 # Handle non-200 status codes
+#                 return JsonResponse({"status": "error", "message": "Failed to verify password. API error."}, status=500)
+#         except Exception as e:
+#             # Handle exceptions such as network issues
+#             print(f"Error during API call: {e}")
+#             return JsonResponse({"status": "error", "message": "An error occurred while processing your request."}, status=500)
+
+#     # Render the password page for GET requests
+#     return render(request, 'password.html')
     
 def home_view(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -298,7 +377,7 @@ def strategy_net_position_view(request):
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)  
 
     
-TOKEN = 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH'
+TOKEN = '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY'
 
 def get_symbols(request):
     try:
@@ -382,7 +461,7 @@ def add_strategy(request):
             headers = {
                 'Accept': 'application/json, text/plain, */*',
                 'Content-Type': 'application/json',
-                'auth-token': 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH'
+                'auth-token': '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY'
             }
 
             response = requests.post(url, headers=headers, json=payload)
@@ -410,7 +489,7 @@ def strategy_watchlist(request):
         'Origin': 'http://172.16.47.87:5173',
         'Referer': 'http://172.16.47.87:5173/',
         'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
-        'auth-token': 'jomcrSm0XF8bts28Hx8Eidn4xiIVGuLH'
+        'auth-token': '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY'
     }
 
     try:

@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'OMS',
     'corsheaders',
+    'GreekSoft',
+    'import_export',
 ]
 
 MIDDLEWARE = [

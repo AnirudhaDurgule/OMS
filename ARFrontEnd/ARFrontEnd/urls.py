@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from OMS.views import ulogin, home, verify_password, password, ulogout, home_view, order_book_view, strategy_list, get_symbols, get_expiry, get_strikes, add_strategy, trade_book_view, net_position_view, strategy_net_position_view, strategy_watchlist , modify_order, cancel_order, place_order
+from OMS.views import ulogin, home, verify_password, password, ulogout, home_view, order_book_view, strategy_list, get_symbols, get_expiry, get_strikes, add_strategy, trade_book_view, net_position_view, strategy_net_position_view, strategy_watchlist , modify_order, cancel_order, place_order, get_market_depth
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,5 +38,6 @@ urlpatterns = [
     path('api/cancelOrder/', cancel_order, name='cancel_order'),
     path('api/placeOrder/', place_order, name='place_order'),
     path('strategy-watchlist/', strategy_watchlist, name='strategy_watchlist'),
+    path('get_market_depth/', get_market_depth, name='get_market_depth'),
     path("ulogout/", ulogout, name='ulogout'),
 ]
