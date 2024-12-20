@@ -692,6 +692,49 @@
     <div class="modal-content-adds">
         <div class="modal-header">
             <p class="modal-title">Add Watchlist</p>
+            <div class="header-right" onclick="closeModal('watchlistModal')" style="font-weight: bold; cursor: pointer;">
+                &#215;
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <div class="form-field">
+                    <label for="client_id">Client ID:</label>
+                    <input id="client_id" name="clientID" type="text" placeholder="Enter Client ID">
+                    <p class="error-message" id="client_id_error"></p>
+                </div>
+                <div class="form-field">
+                    <label for="security_name">Security Name:</label>
+                    <input id="security_name" name="securityName" type="text" placeholder="Enter Security Name">
+                    <p class="error-message" id="security_name_error"></p>
+                </div>
+                <div class="form-field">
+                    <label for="segment">Segment:</label>
+                    <input id="segment" name="segment" type="text" placeholder="Enter Segment">
+                    <p class="error-message" id="segment_error"></p>
+                </div>
+                <div class="form-field">
+                    <label for="token">Token:</label>
+                    <input id="token" name="token" type="text" placeholder="Enter Token">
+                    <p class="error-message" id="token_error"></p>
+                </div>
+                <div class="form-field">
+                    <label for="exchange">Exchange:</label>
+                    <input id="exchange" name="exchange" type="text" placeholder="Enter Exchange">
+                    <p class="error-message" id="exchange_error"></p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="submit-button" onclick="submitWatchlist()">Add Watchlist</button>
+        </div>
+    </div>
+</div>
+
+<!-- <div id="watchlistModal" class="modal">
+    <div class="modal-content-adds">
+        <div class="modal-header">
+            <p class="modal-title">Add Watchlist</p>
             <div class="header-right" onclick="closeModal('watchlistModal')"
                 style="font-weight: bold; cursor: pointer;">&#215;</div>
         </div>
@@ -723,7 +766,7 @@
             <button class="submit-button" onclick="addWatchlist()">Add Watchlist</button>
         </div>
     </div>
-</div>
+</div> -->
 
 
 <div class="floating-buttons">
@@ -2580,7 +2623,102 @@
     });
 </script>
 <script>
-    const token = '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY';
+    function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'none';
+}
+
+function showError(field, message) {
+    const errorElement = document.getElementById(`${field}_error`);
+    errorElement.textContent = message;
+}
+
+function clearErrors() {
+    const errorFields = ['client_id', 'security_name', 'segment', 'token', 'exchange'];
+    errorFields.forEach((field) => {
+        const errorElement = document.getElementById(`${field}_error`);
+        errorElement.textContent = '';
+    });
+}
+
+function submitWatchlist() {
+    clearErrors();
+
+    // Gather form inputs
+    const clientID = document.getElementById('client_id').value.trim();
+    const securityName = document.getElementById('security_name').value.trim();
+    const segment = document.getElementById('segment').value.trim();
+    const token = document.getElementById('token').value.trim();
+    const exchange = document.getElementById('exchange').value.trim();
+
+    // Prepare payload
+    const payload = {
+        clientID,
+        securityName,
+        segment,
+        token,
+        exchange,
+        action: 'add',
+    };
+
+    // Perform client-side validation
+    let hasError = false;
+    if (!clientID) {
+        showError('client_id', 'Client ID is required.');
+        hasError = true;
+    }
+    if (!securityName) {
+        showError('security_name', 'Security Name is required.');
+        hasError = true;
+    }
+    if (!segment) {
+        showError('segment', 'Segment is required.');
+        hasError = true;
+    }
+    if (!token) {
+        showError('token', 'Token is required.');
+        hasError = true;
+    }
+    if (!exchange) {
+        showError('exchange', 'Exchange is required.');
+        hasError = true;
+    }
+
+    if (hasError) return;
+
+    // Send the payload to the Django backend
+    fetch('/api/add_watchlist', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert('Watchlist added successfully!');
+                closeModal('watchlistModal');
+            } else {
+                if (data.errors) {
+                    // Handle validation errors from the backend
+                    Object.keys(data.errors).forEach((field) => {
+                        showError(field.toLowerCase(), data.errors[field]);
+                    });
+                } else {
+                    alert(data.message || 'Failed to add watchlist.');
+                }
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('An unexpected error occurred.');
+        });
+}
+
+</script>
+<script>
+    const token = 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf';
 
     function loadSymbols() {
         fetch('/api/symbols/', {
@@ -2748,7 +2886,47 @@
                     active: true,
                     expiry: leg1Expiry
                 };
+                console.log("Straddle inputs", strategyData);
+            // } else if (strategyCode === "STRANGLE") {
+            //     const leg1Type = "CE";
+            //     const leg1Strike = document.getElementById("strikeprice1").value || 0;
+            //     const leg1Quantity = document.getElementById("ratio1").value || 1;
+            //     const leg1ExecutionType = document.getElementById("leg1").value || "default";
+            //     const leg1Expiry = document.getElementById("expiry1").value || "";
 
+            //     const leg2Type = "PE";
+            //     const leg2Strike = document.getElementById("strikeprice1").value || 0;
+            //     const leg2Quantity = document.getElementById("ratio1").value || 1;
+            //     const leg2ExecutionType = document.getElementById("leg2").value || "default";
+            //     const leg2Expiry = document.getElementById("expiry1").value || "";
+
+            //     const leg3Type = "CE";
+            //     const leg3Strike = document.getElementById("strikeprice3").value || 0;
+            //     const leg3Quantity = document.getElementById("ratio3").value || 1;
+            //     const leg3ExecutionType = document.getElementById("leg3").value || "default";
+            //     const leg3Expiry = document.getElementById("expiry1").value || "";
+
+            //     const leg4Type = "PE";
+            //     const leg4Strike = document.getElementById("strikeprice4").value || 0;
+            //     const leg4Quantity = document.getElementById("ratio3").value || 1;
+            //     const leg4ExecutionType = document.getElementById("leg4").value || "default";
+            //     const leg4Expiry = document.getElementById("expiry1").value || "";
+            //     strategyData = {
+            //         portfolio,
+            //         spread_type: "",
+            //         client_id: clientId,
+            //         underlying,
+            //         strategy_code: strategyCode,
+            //         bidding_mode: biddingMode,
+            //         legs_info: {
+            //             leg1: { type: leg1Type, strike: leg1Strike, quantity: leg1Quantity, executionType: leg1ExecutionType, expiry: leg1Expiry },
+            //             leg2: { type: leg2Type, strike: leg2Strike, quantity: leg2Quantity, executionType: leg2ExecutionType, expiry: leg2Expiry },
+            //             leg3: { type: leg3Type, strike: leg3Strike, quantity: leg3Quantity, executionType: leg3ExecutionType, expiry: leg3Expiry },
+            //             leg4: { type: leg4Type, strike: leg4Strike, quantity: leg4Quantity, executionType: leg4ExecutionType, expiry: leg4Expiry }
+            //         },
+            //         active: true,
+            //         expiry: leg1Expiry
+            //     };
             } else if (strategyCode === "ICNDBID") {
                 const leg1Type = "PE";
                 const leg1Strike = document.getElementById("strikeprice1").value || 0;
@@ -2837,7 +3015,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'auth-token': '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY'
+                    'auth-token': 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
                 },
                 body: JSON.stringify(strategyData)
             })
@@ -2845,7 +3023,7 @@
                 .then(data => {
                     if (data.message) {
                         alert('Strategy added successfully!');
-                        // window.location.reload(); 
+                        window.location.reload();
                     } else {
                         alert('Error: ' + (data.error || 'Unexpected error'));
 
@@ -2912,7 +3090,7 @@
             const apiUrl = 'http://192.168.112.81:8010/v1/strategy-watchlist-gp';
             const headers = {
                 'Accept': 'application/json',
-                'auth-token': '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY'
+                'auth-token': 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
             };
 
             fetch(apiUrl, { headers })
@@ -2966,7 +3144,8 @@
                     // Add data rows for each strategy
                     strategyData.forEach(rowData => {
                         // Sanitize the key by trimming and replacing invalid characters
-                        const sanitizedKey = key.trim().replace(/[^a-zA-Z0-9-_]/g, '_');
+                        // const sanitizedKey = key.trim().replace(/[^a-zA-Z0-9-_]/g, '_');
+                        const sanitizedKey = key.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9-_]/g, '');
                         // console.log("sanitizedKey", sanitizedKey);
                         const dataRow = document.createElement('tr');
                         dataRow.classList.add('data-row', sanitizedKey); // Use sanitized key here
@@ -3237,7 +3416,7 @@
         // Function to make the LTP API call
         async function fetchLTP(symbol, expiry, strike, optType) {
             const url = 'http://192.168.112.81:8010/v1/ltp';
-            const token = '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY';
+            const token = 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf';
             const requestBody = {
                 symbol: symbol,
                 expiry: expiry,
@@ -3414,37 +3593,62 @@
     });
 
     function toggleRows(key, row) {
-        // console.log(`Toggling rows for key: ${key}`);
         const rows = document.querySelectorAll(`.data-row.${key}`);
         const toggleButton = row.querySelector(`#toggleButton-${key}`);
 
         rows.forEach(dataRow => {
-            dataRow.style.display = (dataRow.style.display === 'none' || dataRow.style.display === '') ? 'table-row' : 'none';
+            const isRowHidden = (dataRow.style.display === 'none' || dataRow.style.display === '');
+            dataRow.style.display = isRowHidden ? 'table-row' : 'none';
 
-            // console.log('Row data:', {
-            //     watchlistId: dataRow.getAttribute('data-strategy-id'),
-            //     strategyName: dataRow.getAttribute('data-strategy-name'),
-            //     cells: Array.from(dataRow.cells).map(cell => cell.textContent),
-            //     dataRow
-            // });
-
-            if (dataRow.style.display === 'table-row') {
-                const watchlistId = dataRow.getAttribute('data-strategy-id');
-                console.log("watchlistId",watchlistId);
-                const message = JSON.stringify({ watchlist_id: watchlistId });
-                ws.send(message);
-
-            }
+            const watchlistId = dataRow.getAttribute('data-strategy-id');
+            const message = JSON.stringify({
+                watchlist_id: watchlistId,
+                msg_type: isRowHidden ? "sub" : "unsub",
+                snap: false
+            });
+            ws.send(message);
         });
 
         if (toggleButton.getAttribute('aria-expanded') === 'false') {
             toggleButton.setAttribute('aria-expanded', 'true');
-            toggleButton.textContent = '▲';
+            toggleButton.textContent = '▲'; // Update to show rows are expanded
         } else {
             toggleButton.setAttribute('aria-expanded', 'false');
-            toggleButton.textContent = '▼';
+            toggleButton.textContent = '▼'; // Update to show rows are collapsed
         }
     }
+    // function toggleRows(key, row) {
+    //     // console.log(`Toggling rows for key: ${key}`);
+    //     const rows = document.querySelectorAll(`.data-row.${key}`);
+    //     const toggleButton = row.querySelector(`#toggleButton-${key}`);
+
+    //     rows.forEach(dataRow => {
+    //         dataRow.style.display = (dataRow.style.display === 'none' || dataRow.style.display === '') ? 'table-row' : 'none';
+
+    //         // console.log('Row data:', {
+    //         //     watchlistId: dataRow.getAttribute('data-strategy-id'),
+    //         //     strategyName: dataRow.getAttribute('data-strategy-name'),
+    //         //     cells: Array.from(dataRow.cells).map(cell => cell.textContent),
+    //         //     dataRow
+    //         // });
+
+    //         if (dataRow.style.display === 'table-row') {
+    //             const watchlistId = dataRow.getAttribute('data-strategy-id');
+    //             console.log("watchlistId",watchlistId);
+    //             const message = JSON.stringify({ watchlist_id: watchlistId, msg_type: "sub", snap: false });
+    //             ws.send(message);
+
+    //         }
+    //     });
+
+    //     if (toggleButton.getAttribute('aria-expanded') === 'false') {
+    //         toggleButton.setAttribute('aria-expanded', 'true');
+    //         toggleButton.textContent = '▲';
+    //     } else {
+    //         toggleButton.setAttribute('aria-expanded', 'false');
+    //         toggleButton.textContent = '▼';
+    //     }
+    // }
 </script>
 
 {% endblock %}

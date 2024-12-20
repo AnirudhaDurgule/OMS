@@ -262,6 +262,74 @@ def home_view(request):
 
     return render(request, 'home.html')
 
+@csrf_exempt
+def add_watchlist(request):
+    if request.method == 'POST':
+        try:
+            # Parse the input data from the request
+            data = json.loads(request.body.decode('utf-8'))
+
+            # Extract required fields
+            client_id = data.get('clientID')
+            security_name = data.get('securityName')
+            segment = data.get('segment')
+            token = data.get('token')
+            exchange = data.get('exchange')
+            action = data.get('action', 'add')  # Default action is "add"
+
+            # Validate the fields
+            errors = {}
+            if not client_id:
+                errors['clientID'] = "Client ID is required."
+            if not security_name:
+                errors['securityName'] = "Security Name is required."
+            if not segment:
+                errors['segment'] = "Segment is required."
+            if not token:
+                errors['token'] = "Token is required."
+            if not exchange:
+                errors['exchange'] = "Exchange is required."
+            if action != 'add':
+                errors['action'] = "Only 'add' action is allowed."
+
+            # If there are validation errors, return them
+            if errors:
+                return JsonResponse({"success": False, "errors": errors}, status=400)
+
+            # Prepare the payload for the external API
+            payload = {
+                "clientID": client_id,
+                "source": "web",
+                "securityName": security_name,
+                "segment": segment,
+                "token": token,
+                "exchange": exchange,
+                "action": action,
+            }
+
+            # Make the API request to the external service
+            api_url = "http://192.168.50.35:5000/api/watchlistAdd"
+            headers = {
+                "Content-Type": "application/json",
+                "Cookie": "sessionid=76zbtd0v107wz6id6hcc983ya0647ftf",  # Replace with dynamic session management if needed
+            }
+            response = requests.post(api_url, headers=headers, json=payload)
+
+            # Handle the response from the external API
+            if response.status_code == 200:
+                return JsonResponse({"success": True, "message": "Watchlist added successfully."}, status=200)
+            else:
+                return JsonResponse({"success": False, "message": response.json().get('message', 'Failed to add watchlist.')}, status=response.status_code)
+        except json.JSONDecodeError:
+            return JsonResponse({"success": False, "message": "Invalid JSON data."}, status=400)
+        except requests.RequestException as e:
+            return JsonResponse({"success": False, "message": f"API request failed: {str(e)}"}, status=500)
+        except Exception as e:
+            return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}"}, status=500)
+    else:
+        return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
+    
+
 def order_book_view(request):
     api_url = 'http://192.168.50.35:5000/api/orderBook/'  # Ensure this is the correct endpoint
     sessionid = request.COOKIES.get('sessionid')
@@ -377,7 +445,7 @@ def strategy_net_position_view(request):
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)  
 
     
-TOKEN = '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY'
+TOKEN = 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
 
 def get_symbols(request):
     try:
@@ -461,7 +529,7 @@ def add_strategy(request):
             headers = {
                 'Accept': 'application/json, text/plain, */*',
                 'Content-Type': 'application/json',
-                'auth-token': '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY'
+                'auth-token': 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
             }
 
             response = requests.post(url, headers=headers, json=payload)
@@ -489,7 +557,7 @@ def strategy_watchlist(request):
         'Origin': 'http://172.16.47.87:5173',
         'Referer': 'http://172.16.47.87:5173/',
         'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
-        'auth-token': '0XaWQVoOO16sug0Mpj970rYQXjfVg0sY'
+        'auth-token': 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
     }
 
     try:
