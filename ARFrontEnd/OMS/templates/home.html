@@ -361,6 +361,7 @@
                             <option value="default">Choose Strategy Type</option>
                             <option value="STRADDLE">STRADDLE</option>
                             <option value="STRANGLE">STRANGLE</option>
+                            <option value="SINGLELEG">SINGLELEG</option>
                             <option value="ICNDBID">ICNDBID</option>
                             <option value="BUTTERFLYBID">BUTTERFLYBID</option>
                         </select>
@@ -1176,7 +1177,7 @@
         searchTicker('NIFTY');
     });
 </script>
-<script>
+<!-- <script>
     document.getElementById("watchlistBtn").addEventListener("click", function () {
         document.getElementById("watchlistModal").style.display = "block";
     });
@@ -1246,7 +1247,7 @@
             }, 3000);
         }, 100);
     }
-</script>
+</script> -->
 <script>
     const lotSizes = {
         "NIFTY": 25, "BANKNIFTY": 15, "FINNIFTY": 25, "MIDCPNIFTY": 50, "RELIANCE": 250, "TCS": 150, "INFY": 300, "HDFCBANK": 550,
@@ -1462,25 +1463,33 @@
     const rowsPerPageStrategyPosition = 10;
 
     function fetchOrderBook() {
-        fetch('/order_book_view/')
-            .then(response => response.json())
-            .then(data => {
-                const orderBookBody = document.getElementById('order-book-body');
+        const mobileNumber = localStorage.getItem("mobile_number");
 
-                // Check if data was successfully fetched
-                if (data.order_book) {
-                    // Clear any existing content
-                    orderBookBody.innerHTML = '';
-                    orderBookData = data.order_book;
-                    renderPaginatedOrderBook(); // Render the first page
-                } else {
-                    document.getElementById('order-book-body').innerHTML = '<tr><td colspan="19">No orders available</td></tr>';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching Order Book:', error);
-                document.getElementById('order-book-body').innerHTML = '<tr><td colspan="19">Error fetching order book</td></tr>';
-            });
+        fetch('/order_book_view/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ clientCode: mobileNumber }) // Send the clientCode to the backend
+        })
+        .then(response => response.json())
+        .then(data => {
+            const orderBookBody = document.getElementById('order-book-body');
+
+            // Check if data was successfully fetched
+            if (data.order_book) {
+                // Clear any existing content
+                orderBookBody.innerHTML = '';
+                orderBookData = data.order_book;
+                renderPaginatedOrderBook(); // Render the first page
+            } else {
+                document.getElementById('order-book-body').innerHTML = '<tr><td colspan="19">No orders available</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching Order Book:', error);
+            document.getElementById('order-book-body').innerHTML = '<tr><td colspan="19">Error fetching order book</td></tr>';
+        });
     }
 
     function renderPaginatedOrderBook() {
@@ -1545,22 +1554,30 @@
 
 
     function fetchTradeBook() {
-        fetch('/trade_book_view/')
-            .then(response => response.json())
-            .then(data => {
-                const tradeBookBody = document.getElementById('trade-book-body');
-                if (data.trade_book && data.trade_book.length > 0) {
-                    tradeBookData = data.trade_book;
-                    currentTradeBookPage = 1; // Reset to the first page
-                    renderPaginatedTradeBook(); // Render the first page
-                } else {
-                    tradeBookBody.innerHTML = '<tr><td colspan="6">No trade book data available</td></tr>';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching Trade Book:', error);
-                document.getElementById('trade-book-body').innerHTML = '<tr><td colspan="6">Error fetching trade book data</td></tr>';
-            });
+        const mobileNumber = localStorage.getItem("mobile_number");
+
+        fetch('/trade_book_view/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ clientCode: mobileNumber }) // Send the clientCode to the backend
+        })
+        .then(response => response.json())
+        .then(data => {
+            const tradeBookBody = document.getElementById('trade-book-body');
+            if (data.trade_book && data.trade_book.length > 0) {
+                tradeBookData = data.trade_book;
+                currentTradeBookPage = 1; // Reset to the first page
+                renderPaginatedTradeBook(); // Render the first page
+            } else {
+                tradeBookBody.innerHTML = '<tr><td colspan="6">No trade book data available</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching Trade Book:', error);
+            document.getElementById('trade-book-body').innerHTML = '<tr><td colspan="6">Error fetching trade book data</td></tr>';
+        });
     }
 
     // Render paginated trade book data
@@ -1612,20 +1629,30 @@
     }
 
     function fetchNetPosition() {
-        fetch('/net_position_view/')
-            .then(response => response.json())
-            .then(data => {
-                if (data.net_position && Array.isArray(data.net_position)) {
-                    netPositionData = data.net_position;
-                    renderPaginatedNetPosition(); // Call the render function
-                } else {
-                    document.getElementById('net-position-body').innerHTML = '<tr><td colspan="4">No net position data available</td></tr>';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching Net Position:', error);
-                document.getElementById('net-position-body').innerHTML = '<tr><td colspan="4">Error fetching net position data</td></tr>';
-            });
+        const mobileNumber = localStorage.getItem("mobile_number");
+
+        fetch('/net_position_view/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ clientCode: mobileNumber }) // Send the clientCode to the backend
+        })
+        .then(response => response.json())
+        .then(data => {
+            const netBookBody = document.getElementById('net-position-body');
+            if (data.trade_book && data.trade_book.length > 0) {
+                tradeBookData = data.trade_book;
+                currentTradeBookPage = 1; // Reset to the first page
+                renderPaginatedTradeBook(); // Render the first page
+            } else {
+                netBookBody.innerHTML = '<tr><td colspan="6">No net position data available</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching Net Position:', error);
+            document.getElementById('net-position-body').innerHTML = '<tr><td colspan="4">Error fetching net position data</td></tr>';
+        });
     }
 
     // Render paginated net position
@@ -1706,20 +1733,30 @@
     // console.log(qtyInput);
     // console.log(lotSizeInput);
     function fetchStrategyNetPosition() {
-        fetch('/strategy_net_position_view/')
-            .then(response => response.json())
-            .then(data => {
-                if (data.net_position && Array.isArray(data.net_position)) {
-                    strategyNetPositionData = data.net_position;
-                    renderPaginatedStrategyPosition(); // Call the render function
-                } else {
-                    document.getElementById('strategy-position-body').innerHTML = '<tr><td colspan="4">No strategy net position data available</td></tr>';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching Strategy Net Position:', error);
-                document.getElementById('strategy-position-body').innerHTML = '<tr><td colspan="4">Error fetching strategy net position data</td></tr>';
-            });
+        const mobileNumber = localStorage.getItem("mobile_number");
+
+        fetch('/strategy_net_position_view/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ clientCode: mobileNumber }) // Send the clientCode to the backend
+        })
+        .then(response => response.json())
+        .then(data => {
+            const strategyBookBody = document.getElementById('strategy-position-body');
+            if (data.trade_book && data.trade_book.length > 0) {
+                tradeBookData = data.trade_book;
+                currentTradeBookPage = 1; // Reset to the first page
+                renderPaginatedTradeBook(); // Render the first page
+            } else {
+                strategyBookBody.innerHTML = '<tr><td colspan="6">No strategywise net position data available</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching Strategy Net Position:', error);
+            document.getElementById('strategy-position-body').innerHTML = '<tr><td colspan="4">Error fetching strategy net position data</td></tr>';
+        });
     }
 
     // Render paginated strategy net position
@@ -1899,11 +1936,28 @@
                 alert("An error occurred while placing orders.");
             }
         }
-        if (globalStrategyName === "STRANGLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        else if (globalStrategyName === "STRANGLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
             // Create an array to store both order details
             const orders = [
                 { optType: "PE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
                 { optType: "CE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+            ];
+
+            try {
+                // Use a for loop to place each order one by one
+                for (let i = 0; i < orders.length; i++) {
+                    const order = orders[i];
+                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                }
+            } catch (error) {
+                console.error("Error placing orders:", error);
+                alert("An error occurred while placing orders.");
+            }
+        }
+        else if (globalStrategyName === "SINGLELEG" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+            // Create an array to store both order details
+            const orders = [
+                { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
             ];
 
             try {
@@ -2161,47 +2215,137 @@
     //     }
     // }
     async function placeOrder(optType, ltpValue, qty, scripcode) {
-        const tokenID = `NSEFO${scripcode}`;
+    const tokenID = `NSEFO${scripcode}`;
+    const mobileNumber = localStorage.getItem('mobileNumber');
+    const limit = document.getElementById("newBuyPriceInput").value;
 
-        const orderData = {
-            event: "BUY",
-            productType: "NRML",
-            tokenID: tokenID,
-            action: "BUY",
-            limitPrice: parseFloat(ltpValue),  // Ensure it's a number
-            orderQuantity: parseInt(qty, 10),  // Ensure it's a number
-            orderSide: "BUY",
-            appOrderID: "",
-            uniqueIdentifier: "",
-            stopPrice: 0,
-            disclosedQuantity: "0",
-            timeInForce: "DAY",
-            orderType: "MARKET",
-            algoID: 499
-        };
+    const orderData = {
+        clientCode: mobileNumber,
+        event: "BUY",
+        productType: "NRML",
+        tokenID: tokenID,
+        action: "BUY",
+        limitPrice: parseFloat(ltpValue) === 0 ? parseFloat(limit) : parseFloat(ltpValue),
+        orderQuantity: parseInt(qty, 10),
+        orderSide: "BUY",
+        appOrderID: "",
+        uniqueIdentifier: "",
+        stopPrice: 0,
+        disclosedQuantity: "0",
+        timeInForce: "DAY",
+        orderType: "MARKET",
+        algoID: 499
+    };
 
-        try {
-            const response = await fetch('/api/placeOrder/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(orderData)
-            });
+    try {
+        const response = await fetch('/api/placeOrder/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': 'sessionid=ulfl5bco42ko7hfph3b5ktkhhc8ceq5m'
+            },
+            body: JSON.stringify(orderData)
+        });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                alert(`Order placed successfully for ${optType}!`);
-            } else {
-                throw new Error(`Failed to place order: ${data.error || 'Unknown error'}`);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert(`Failed to place the order for ${optType}.`);
-        }
+        const data = await response.json();
+        console.log("Order Response:", data);
+    } catch (error) {
+        console.error("Order placement error:", error);
     }
+}
+//     async function placeOrder(optType, ltpValue, qty, scripcode) {
+//     const mobileNumber = localStorage.getItem("mobile_number");
+//     if (!mobileNumber) {
+//         alert("Client code is missing. Please log in again.");
+//         return;
+//     }
+
+//     const tokenID = `NSEFO${scripcode}`;
+
+//     const orderData = {
+//         event: "BUY",
+//         productType: "NRML",
+//         tokenID: `${tokenID}`,
+//         action: "BUY",
+//         limitPrice: `${parseFloat(ltpValue)}`,
+//         orderQuantity: `${parseInt(qty, 10)}`,
+//         orderSide: "BUY",
+//         appOrderID: "",
+//         uniqueIdentifier: "",
+//         stopPrice: "0",
+//         disclosedQuantity: "0",
+//         timeInForce: "DAY",
+//         orderType: "MARKET",
+//         IOC: "1",
+//         algoID: "499",
+//         clientCode: `${mobileNumber}`,
+//     };
+
+//     try {
+//         const response = await fetch('/api/placeOrder/', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(orderData) // Convert orderData to JSON
+//         });
+
+//         const data = await response.json();
+
+//         if (response.ok) {
+//             alert(`Order placed successfully for ${optType}!`);
+//         } else {
+//             throw new Error(`Failed to place order: ${data.reason || 'Unknown error'}`);
+//         }
+//     } catch (error) {
+//         console.error('Error:', error);
+//         alert(`Failed to place the order for ${optType}.`);
+//     }
+// }
     // async function placeOrder(optType, ltpValue, qty, scripcode) {
+    //     const mobileNumber = localStorage.getItem("mobile_number");
+    //     const tokenID = `NSEFO${scripcode}`;
+
+    //     const orderData = {
+    //         clientCode: mobileNumber,
+    //         event: "BUY",
+    //         productType: "NRML",
+    //         tokenID: tokenID,
+    //         action: "BUY",
+    //         limitPrice: parseFloat(ltpValue) || newBuyPrice,  // Ensure it's a number
+    //         orderQuantity: parseInt(qty, 10),  // Ensure it's a number
+    //         orderSide: "BUY",
+    //         appOrderID: "",
+    //         uniqueIdentifier: "",
+    //         stopPrice: 0,
+    //         disclosedQuantity: "0",
+    //         timeInForce: "DAY",
+    //         orderType: "MARKET",
+    //         IOC: 1,
+    //         algoID: 499
+    //     };
+
+    //     try {
+    //         const response = await fetch('/api/placeOrder/', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify(orderData)
+    //         });
+    //         const data = await response.json();
+
+    //         if (response.ok) {
+    //             alert(`Order placed successfully for ${optType}!`);
+    //         } else {
+    //             throw new Error(`Failed to place order: ${data.error || 'Unknown error'}`);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //         alert(`Failed to place the order for ${optType}.`);
+    //     }
+    // }
+    // // async function placeOrder(optType, ltpValue, qty, scripcode) {
 
     //     const tokenID = `NSEFO${scripcode}`;
 
@@ -2273,6 +2417,41 @@
             } catch (error) {
                 console.error("Error placing sell orders:", error);
                 alert("An error occurred while placing sell orders.");
+            }
+        }
+        else if (globalStrategyName === "STRANGLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+            // Create an array to store both order details
+            const orders = [
+                { optType: "PE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: "CE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+            ];
+
+            try {
+                // Use a for loop to place each order one by one
+                for (let i = 0; i < orders.length; i++) {
+                    const order = orders[i];
+                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                }
+            } catch (error) {
+                console.error("Error placing orders:", error);
+                alert("An error occurred while placing orders.");
+            }
+        }
+        else if (globalStrategyName === "SINGLELEG" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+            // Create an array to store both order details
+            const orders = [
+                { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+            ];
+
+            try {
+                // Use a for loop to place each order one by one
+                for (let i = 0; i < orders.length; i++) {
+                    const order = orders[i];
+                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                }
+            } catch (error) {
+                console.error("Error placing orders:", error);
+                alert("An error occurred while placing orders.");
             }
         }
         else if (globalStrategyName === "ICNDBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird && peLTPGlobalFourth && scripcodePEFourth) {
@@ -2349,9 +2528,11 @@
     // }
 
     async function placeSellOrder(optType, ltpValue, qty, scripcode) {
+        const mobileNumber = localStorage.getItem("mobile_number");
         const tokenID = `NSEFO${scripcode}`;
 
         const orderData = {
+            clientCode: mobileNumber,
             event: "SELL",
             productType: "NRML",
             tokenID: tokenID,
@@ -2365,6 +2546,7 @@
             disclosedQuantity: "0",
             timeInForce: "DAY",
             orderType: "MARKET",
+            IOC: 1,
             algoID: 499
         };
 
@@ -2623,6 +2805,14 @@
     });
 </script>
 <script>
+    document.getElementById("watchlistBtn").addEventListener("click", function () {
+        document.getElementById("watchlistModal").style.display = "block";
+    });
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+    
     function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     modal.style.display = 'none';
@@ -2691,6 +2881,7 @@ function submitWatchlist() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            // 'X-CSRFToken': getCsrfToken(),
         },
         body: JSON.stringify(payload),
     })
@@ -2718,7 +2909,7 @@ function submitWatchlist() {
 
 </script>
 <script>
-    const token = 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf';
+    const token = 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm';
 
     function loadSymbols() {
         fetch('/api/symbols/', {
@@ -2887,46 +3078,86 @@ function submitWatchlist() {
                     expiry: leg1Expiry
                 };
                 console.log("Straddle inputs", strategyData);
-            // } else if (strategyCode === "STRANGLE") {
-            //     const leg1Type = "CE";
-            //     const leg1Strike = document.getElementById("strikeprice1").value || 0;
-            //     const leg1Quantity = document.getElementById("ratio1").value || 1;
-            //     const leg1ExecutionType = document.getElementById("leg1").value || "default";
-            //     const leg1Expiry = document.getElementById("expiry1").value || "";
+            } else if (strategyCode === "STRANGLE") {
+                const leg1Type = "CE";
+                const leg1Strike = document.getElementById("strikeprice1").value || 0;
+                const leg1Quantity = document.getElementById("ratio1").value || 1;
+                const leg1ExecutionType = document.getElementById("leg1").value || "default";
+                const leg1Expiry = document.getElementById("expiry1").value || "";
 
-            //     const leg2Type = "PE";
-            //     const leg2Strike = document.getElementById("strikeprice1").value || 0;
-            //     const leg2Quantity = document.getElementById("ratio1").value || 1;
-            //     const leg2ExecutionType = document.getElementById("leg2").value || "default";
-            //     const leg2Expiry = document.getElementById("expiry1").value || "";
+                const leg2Type = "PE";
+                const leg2Strike = document.getElementById("strikeprice1").value || 0;
+                const leg2Quantity = document.getElementById("ratio1").value || 1;
+                const leg2ExecutionType = document.getElementById("leg2").value || "default";
+                const leg2Expiry = document.getElementById("expiry1").value || "";
 
-            //     const leg3Type = "CE";
-            //     const leg3Strike = document.getElementById("strikeprice3").value || 0;
-            //     const leg3Quantity = document.getElementById("ratio3").value || 1;
-            //     const leg3ExecutionType = document.getElementById("leg3").value || "default";
-            //     const leg3Expiry = document.getElementById("expiry1").value || "";
+                const leg3Type = "CE";
+                const leg3Strike = document.getElementById("strikeprice3").value || 0;
+                const leg3Quantity = document.getElementById("ratio3").value || 1;
+                const leg3ExecutionType = document.getElementById("leg3").value || "default";
+                const leg3Expiry = document.getElementById("expiry1").value || "";
 
-            //     const leg4Type = "PE";
-            //     const leg4Strike = document.getElementById("strikeprice4").value || 0;
-            //     const leg4Quantity = document.getElementById("ratio3").value || 1;
-            //     const leg4ExecutionType = document.getElementById("leg4").value || "default";
-            //     const leg4Expiry = document.getElementById("expiry1").value || "";
-            //     strategyData = {
-            //         portfolio,
-            //         spread_type: "",
-            //         client_id: clientId,
-            //         underlying,
-            //         strategy_code: strategyCode,
-            //         bidding_mode: biddingMode,
-            //         legs_info: {
-            //             leg1: { type: leg1Type, strike: leg1Strike, quantity: leg1Quantity, executionType: leg1ExecutionType, expiry: leg1Expiry },
-            //             leg2: { type: leg2Type, strike: leg2Strike, quantity: leg2Quantity, executionType: leg2ExecutionType, expiry: leg2Expiry },
-            //             leg3: { type: leg3Type, strike: leg3Strike, quantity: leg3Quantity, executionType: leg3ExecutionType, expiry: leg3Expiry },
-            //             leg4: { type: leg4Type, strike: leg4Strike, quantity: leg4Quantity, executionType: leg4ExecutionType, expiry: leg4Expiry }
-            //         },
-            //         active: true,
-            //         expiry: leg1Expiry
-            //     };
+                const leg4Type = "PE";
+                const leg4Strike = document.getElementById("strikeprice4").value || 0;
+                const leg4Quantity = document.getElementById("ratio3").value || 1;
+                const leg4ExecutionType = document.getElementById("leg4").value || "default";
+                const leg4Expiry = document.getElementById("expiry1").value || "";
+                strategyData = {
+                    portfolio,
+                    spread_type: "",
+                    client_id: clientId,
+                    underlying,
+                    strategy_code: strategyCode,
+                    bidding_mode: biddingMode,
+                    legs_info: {
+                        leg1: { type: leg1Type, strike: leg1Strike, quantity: leg1Quantity, executionType: leg1ExecutionType, expiry: leg1Expiry },
+                        leg2: { type: leg2Type, strike: leg2Strike, quantity: leg2Quantity, executionType: leg2ExecutionType, expiry: leg2Expiry },
+                        leg3: { type: leg3Type, strike: leg3Strike, quantity: leg3Quantity, executionType: leg3ExecutionType, expiry: leg3Expiry },
+                        leg4: { type: leg4Type, strike: leg4Strike, quantity: leg4Quantity, executionType: leg4ExecutionType, expiry: leg4Expiry }
+                    },
+                    active: true,
+                    expiry: leg1Expiry
+                };
+            }    else if (strategyCode === "SINGLELEG") {
+                const leg1Type = "CE";
+                const leg1Strike = document.getElementById("strikeprice1").value || 0;
+                const leg1Quantity = document.getElementById("ratio1").value || 1;
+                const leg1ExecutionType = document.getElementById("leg1").value || "default";
+                const leg1Expiry = document.getElementById("expiry1").value || "";
+
+                const leg2Type = "PE";
+                const leg2Strike = document.getElementById("strikeprice1").value || 0;
+                const leg2Quantity = document.getElementById("ratio1").value || 1;
+                const leg2ExecutionType = document.getElementById("leg2").value || "default";
+                const leg2Expiry = document.getElementById("expiry1").value || "";
+
+                const leg3Type = "CE";
+                const leg3Strike = document.getElementById("strikeprice3").value || 0;
+                const leg3Quantity = document.getElementById("ratio3").value || 1;
+                const leg3ExecutionType = document.getElementById("leg3").value || "default";
+                const leg3Expiry = document.getElementById("expiry1").value || "";
+
+                const leg4Type = "PE";
+                const leg4Strike = document.getElementById("strikeprice4").value || 0;
+                const leg4Quantity = document.getElementById("ratio3").value || 1;
+                const leg4ExecutionType = document.getElementById("leg4").value || "default";
+                const leg4Expiry = document.getElementById("expiry1").value || "";
+                strategyData = {
+                    portfolio,
+                    spread_type: "",
+                    client_id: clientId,
+                    underlying,
+                    strategy_code: strategyCode,
+                    bidding_mode: biddingMode,
+                    legs_info: {
+                        leg1: { type: leg1Type, strike: leg1Strike, quantity: leg1Quantity, executionType: leg1ExecutionType, expiry: leg1Expiry },
+                        leg2: { type: leg2Type, strike: leg2Strike, quantity: leg2Quantity, executionType: leg2ExecutionType, expiry: leg2Expiry },
+                        leg3: { type: leg3Type, strike: leg3Strike, quantity: leg3Quantity, executionType: leg3ExecutionType, expiry: leg3Expiry },
+                        leg4: { type: leg4Type, strike: leg4Strike, quantity: leg4Quantity, executionType: leg4ExecutionType, expiry: leg4Expiry }
+                    },
+                    active: true,
+                    expiry: leg1Expiry
+                };
             } else if (strategyCode === "ICNDBID") {
                 const leg1Type = "PE";
                 const leg1Strike = document.getElementById("strikeprice1").value || 0;
@@ -3015,7 +3246,7 @@ function submitWatchlist() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'auth-token': 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
+                    'auth-token': 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
                 },
                 body: JSON.stringify(strategyData)
             })
@@ -3087,10 +3318,10 @@ function submitWatchlist() {
         }
         // Function to fetch strategy data
         function fetchStrategyData() {
-            const apiUrl = 'http://192.168.112.81:8010/v1/strategy-watchlist-gp';
+            const apiUrl = 'http://192.168.112.81:8010/v1/strategy-watchlist-gp?mode=s?mode=m';
             const headers = {
                 'Accept': 'application/json',
-                'auth-token': 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
+                'auth-token': 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
             };
 
             fetch(apiUrl, { headers })
@@ -3212,42 +3443,66 @@ function submitWatchlist() {
 
             const strategyId = row.getAttribute('data-strategy-id');
             const strategyName = strategyMap[strategyId];
-            console.log("strategyName", strategyName)
-
+            console.log("strategyName",strategyName)
+            
 
             if (strategyName) {
                 const splitStrategyName = strategyName.split('_');
                 globalStrategyName = splitStrategyName[0];
 
                 if (splitStrategyName[0] === 'STRADDLE') {
-                    const symbol = splitStrategyName[1];
-                    const expiry = splitStrategyName[3];
+                    const symbol = splitStrategyName[1]; 
+                    const expiry = splitStrategyName[3]; 
                     const strike = splitStrategyName[2];
 
                     symbols = symbol
                     const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
                     const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
 
-
+                    
                     if (!ceLTPData || !peLTPData) {
                         console.error("Failed to get valid LTPs for CE or PE");
-                        return;
+                        return;  
                     }
 
+                    
+                    ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                    scripcodeCE = ceLTPData.scripcode; 
 
-                    ceLTPGlobal = Math.floor(ceLTPData.LTP);
-                    scripcodeCE = ceLTPData.scripcode;
-
-                    peLTPGlobal = Math.floor(peLTPData.LTP);
+                    peLTPGlobal = Math.floor(peLTPData.LTP );
                     scripcodePE = peLTPData.scripcode;
-
+                    
 
                     console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
-                }
-                else if (splitStrategyName[0] === 'ICNDBID') {
+
+                } else if (splitStrategyName[0] === 'STRANGLE') {
+                    const symbol = splitStrategyName[1]; 
+                    const expiry = splitStrategyName[3]; 
+                    const strike = splitStrategyName[2];
+
+                    symbols = symbol
+                    const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+                    const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
+
+                    
+                    if (!ceLTPData || !peLTPData) {
+                        console.error("Failed to get valid LTPs for CE or PE");
+                        return;  
+                    }
+
+                    
+                    ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                    scripcodeCE = ceLTPData.scripcode; 
+
+                    peLTPGlobal = Math.floor(peLTPData.LTP );
+                    scripcodePE = peLTPData.scripcode;
+                    
+
+                    console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
+                } else if(splitStrategyName[0] === 'ICNDBID'){
                     // ICNDBID_NIFTY_25100_25150_25200_25250_PE_CE_10OCT2024_CP1_LIMIT_MARKET_MARKET_MARKET
-                    const symbol = splitStrategyName[1];
-                    const expiry = splitStrategyName[8];
+                    const symbol = splitStrategyName[1]; 
+                    const expiry = splitStrategyName[8]; 
                     const strike = splitStrategyName[2];
                     const strike2 = splitStrategyName[3];
                     const strike3 = splitStrategyName[4];
@@ -3259,32 +3514,32 @@ function submitWatchlist() {
                     const ceLTPDataThird = await fetchLTP(symbol, expiry, strike3, "CE");
                     const peLTPDataFourth = await fetchLTP(symbol, expiry, strike4, "PE");
 
-
+                    
                     if (!ceLTPData || !peLTPData || !ceLTPDataThird || !peLTPDataFourth) {
                         console.error("Failed to get valid LTPs for CE or PE");
-                        return;
+                        return;  
                     }
 
+                    
+                    ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                    scripcodeCE = ceLTPData.scripcode; 
 
-                    ceLTPGlobal = Math.floor(ceLTPData.LTP);
-                    scripcodeCE = ceLTPData.scripcode;
-
-                    peLTPGlobal = Math.floor(peLTPData.LTP);
+                    peLTPGlobal = Math.floor(peLTPData.LTP );
                     scripcodePE = peLTPData.scripcode;
 
-                    ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP);
-                    scripcodeCEThird = ceLTPDataThird.scripcode;
+                    ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP );
+                    scripcodeCEThird = ceLTPDataThird.scripcode; 
 
-                    peLTPGlobalFourth = Math.floor(peLTPDataFourth.LTP);
+                    peLTPGlobalFourth = Math.floor(peLTPDataFourth.LTP );
                     scripcodePEFourth = peLTPDataFourth.scripcode;
+                    
 
-
-                    console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE, ceLTPGlobalThird, scripcodeCEThird, peLTPGlobalFourth, scripcodePEFourth);
+                    console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE, ceLTPGlobalThird,scripcodeCEThird,peLTPGlobalFourth,scripcodePEFourth);
                 }
-                else if (splitStrategyName[0] === 'BUTTERFLYBID') {
+                else if(splitStrategyName[0] === 'BUTTERFLYBID'){
                     // BUTTERFLYBID_NIFTY_25100_25150_25200_CE_10OCT2024_CP1_LIMIT_MARKET_MARKET
-                    const symbol = splitStrategyName[1];
-                    const expiry = splitStrategyName[6];
+                    const symbol = splitStrategyName[1]; 
+                    const expiry = splitStrategyName[6]; 
                     const strike = splitStrategyName[2];
                     const strike2 = splitStrategyName[3];
                     const strike3 = splitStrategyName[4];
@@ -3297,32 +3552,230 @@ function submitWatchlist() {
                     const peLTPData = await fetchLTP(symbol, expiry, strike2, opt_type);
                     const ceLTPDataThird = await fetchLTP(symbol, expiry, strike3, opt_type);
 
-
-                    if (!ceLTPData || !peLTPData || !ceLTPDataThird) {
+                    
+                    if (!ceLTPData || !peLTPData || !ceLTPDataThird ) {
                         console.error("Failed to get valid LTPs for CE or PE");
-                        return;
+                        return;  
                     }
 
+                    
+                    ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                    scripcodeCE = ceLTPData.scripcode; 
 
-                    ceLTPGlobal = Math.floor(ceLTPData.LTP);
-                    scripcodeCE = ceLTPData.scripcode;
-
-                    peLTPGlobal = Math.floor(peLTPData.LTP);
+                    peLTPGlobal = Math.floor(peLTPData.LTP );
                     scripcodePE = peLTPData.scripcode;
 
-                    ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP);
-                    scripcodeCEThird = ceLTPDataThird.scripcode;
+                    ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP );
+                    scripcodeCEThird = ceLTPDataThird.scripcode; 
 
 
                     console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =");
                 }
+                else if (splitStrategyName[0] === 'SINGLELEG') {
+                    const symbol = splitStrategyName[1]; 
+                    const expiry = splitStrategyName[4]; 
+                    const strike = splitStrategyName[2];
+                    const opt_type = splitStrategyName[3];
+                    optType = opt_type;
+                    symbols = symbol
+                    const ceLTPData = await fetchLTP(symbol, expiry, strike, optType);
+
+                    
+                    if (!ceLTPData) {
+                        console.error("Failed to get valid LTPs for CE or PE");
+                        return;
+                    }
+
+                    
+                    ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                    scripcodeCE = ceLTPData.scripcode;
+
+                    console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE);
+                }
+                else if(splitStrategyName[0] === 'SCR'){
+                    // BUTTERFLYBID_NIFTY_25100_25150_25200_CE_10OCT2024_CP1_LIMIT_MARKET_MARKET
+                    const symbol = splitStrategyName[1]; 
+                    const expiry = splitStrategyName[6]; 
+                    const strike = splitStrategyName[2];
+                    const strike2 = splitStrategyName[3];
+                    const strike3 = splitStrategyName[4];
+                    const opt_type = splitStrategyName[5];
+
+                    optType = opt_type;
+
+                    symbols = symbol
+                    const ceLTPData = await fetchLTP(symbol, expiry, strike, "FUT");
+                    const peLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+                    const ceLTPDataThird = await fetchLTP(symbol, expiry, strike, "PE");
+
+                    
+                    if (!ceLTPData || !peLTPData || !ceLTPDataThird ) {
+                        console.error("Failed to get valid LTPs for CE or PE");
+                        return;  
+                    }
+
+                    
+                    ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                    scripcodeCE = ceLTPData.scripcode; 
+
+                    peLTPGlobal = Math.floor(peLTPData.LTP );
+                    scripcodePE = peLTPData.scripcode;
+
+                    ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP );
+                    scripcodeCEThird = ceLTPDataThird.scripcode; 
 
 
+                    console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =");
+                }
             }
 
             modal.style.display = "block";
         }
         // async function openBuyModalnew(buyPrice, row) {
+        //     const modal = document.getElementById('buyModalnew');
+        //     const buyPriceInput = document.getElementById('newBuyPriceInput');
+
+        //     if (buyPrice) {
+        //         buyPriceInput.value = buyPrice;
+        //     }
+
+        //     const strategyId = row.getAttribute('data-strategy-id');
+        //     const strategyName = strategyMap[strategyId];
+        //     console.log("strategyName", strategyName)
+
+
+        //     if (strategyName) {
+        //         const splitStrategyName = strategyName.split('_');
+        //         globalStrategyName = splitStrategyName[0];
+
+        //         if (splitStrategyName[0] === 'STRADDLE') {
+        //             const symbol = splitStrategyName[1];
+        //             const expiry = splitStrategyName[3];
+        //             const strike = splitStrategyName[2];
+
+        //             symbols = symbol
+        //             const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+        //             const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
+
+
+        //             if (!ceLTPData || !peLTPData) {
+        //                 console.error("Failed to get valid LTPs for CE or PE");
+        //                 return;
+        //             }
+
+
+        //             ceLTPGlobal = Math.floor(ceLTPData.LTP);
+        //             scripcodeCE = ceLTPData.scripcode;
+
+        //             peLTPGlobal = Math.floor(peLTPData.LTP);
+        //             scripcodePE = peLTPData.scripcode;
+
+
+        //             console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
+                
+        //         }  else if (splitStrategyName[0] === 'STRANGLE') {
+        //             const symbol = splitStrategyName[1]; 
+        //             const expiry = splitStrategyName[3]; 
+        //             const strike = splitStrategyName[2];
+
+        //             symbols = symbol
+        //             const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+        //             const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
+
+                    
+        //             if (!ceLTPData || !peLTPData) {
+        //                 console.error("Failed to get valid LTPs for CE or PE");
+        //                 return;  
+        //             }
+
+                    
+        //             ceLTPGlobal = Math.floor(ceLTPData.LTP );
+        //             scripcodeCE = ceLTPData.scripcode; 
+
+        //             peLTPGlobal = Math.floor(peLTPData.LTP );
+        //             scripcodePE = peLTPData.scripcode;
+                    
+
+        //             console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
+        //         } else if (splitStrategyName[0] === 'ICNDBID') {
+        //             // ICNDBID_NIFTY_25100_25150_25200_25250_PE_CE_10OCT2024_CP1_LIMIT_MARKET_MARKET_MARKET
+        //             const symbol = splitStrategyName[1];
+        //             const expiry = splitStrategyName[8];
+        //             const strike = splitStrategyName[2];
+        //             const strike2 = splitStrategyName[3];
+        //             const strike3 = splitStrategyName[4];
+        //             const strike4 = splitStrategyName[5];
+
+        //             symbols = symbol
+        //             const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+        //             const peLTPData = await fetchLTP(symbol, expiry, strike2, "PE");
+        //             const ceLTPDataThird = await fetchLTP(symbol, expiry, strike3, "CE");
+        //             const peLTPDataFourth = await fetchLTP(symbol, expiry, strike4, "PE");
+
+
+        //             if (!ceLTPData || !peLTPData || !ceLTPDataThird || !peLTPDataFourth) {
+        //                 console.error("Failed to get valid LTPs for CE or PE");
+        //                 return;
+        //             }
+
+
+        //             ceLTPGlobal = Math.floor(ceLTPData.LTP);
+        //             scripcodeCE = ceLTPData.scripcode;
+
+        //             peLTPGlobal = Math.floor(peLTPData.LTP);
+        //             scripcodePE = peLTPData.scripcode;
+
+        //             ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP);
+        //             scripcodeCEThird = ceLTPDataThird.scripcode;
+
+        //             peLTPGlobalFourth = Math.floor(peLTPDataFourth.LTP);
+        //             scripcodePEFourth = peLTPDataFourth.scripcode;
+
+
+        //             console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE, ceLTPGlobalThird, scripcodeCEThird, peLTPGlobalFourth, scripcodePEFourth);
+        //         }
+        //         else if (splitStrategyName[0] === 'BUTTERFLYBID') {
+        //             // BUTTERFLYBID_NIFTY_25100_25150_25200_CE_10OCT2024_CP1_LIMIT_MARKET_MARKET
+        //             const symbol = splitStrategyName[1];
+        //             const expiry = splitStrategyName[6];
+        //             const strike = splitStrategyName[2];
+        //             const strike2 = splitStrategyName[3];
+        //             const strike3 = splitStrategyName[4];
+        //             const opt_type = splitStrategyName[5];
+
+        //             optType = opt_type;
+
+        //             symbols = symbol
+        //             const ceLTPData = await fetchLTP(symbol, expiry, strike, opt_type);
+        //             const peLTPData = await fetchLTP(symbol, expiry, strike2, opt_type);
+        //             const ceLTPDataThird = await fetchLTP(symbol, expiry, strike3, opt_type);
+
+
+        //             if (!ceLTPData || !peLTPData || !ceLTPDataThird) {
+        //                 console.error("Failed to get valid LTPs for CE or PE");
+        //                 return;
+        //             }
+
+
+        //             ceLTPGlobal = Math.floor(ceLTPData.LTP);
+        //             scripcodeCE = ceLTPData.scripcode;
+
+        //             peLTPGlobal = Math.floor(peLTPData.LTP);
+        //             scripcodePE = peLTPData.scripcode;
+
+        //             ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP);
+        //             scripcodeCEThird = ceLTPDataThird.scripcode;
+
+
+        //             console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =");
+        //         }
+
+
+        //     }
+
+        //     modal.style.display = "block";
+        // }
+        // // async function openBuyModalnew(buyPrice, row) {
         //     const modal = document.getElementById('buyModalnew');
         //     const buyPriceInput = document.getElementById('newBuyPriceInput');
 
@@ -3416,7 +3869,7 @@ function submitWatchlist() {
         // Function to make the LTP API call
         async function fetchLTP(symbol, expiry, strike, optType) {
             const url = 'http://192.168.112.81:8010/v1/ltp';
-            const token = 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf';
+            const token = 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm';
             const requestBody = {
                 symbol: symbol,
                 expiry: expiry,

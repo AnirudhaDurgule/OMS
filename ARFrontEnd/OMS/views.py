@@ -201,58 +201,6 @@ def get_market_depth(request):
             return JsonResponse({"status": "error", "message": str(e)})
     else:
         return JsonResponse({"status": "error", "message": "Invalid request method"})
-# def password(request):
-#     if request.method == 'POST':
-#         try:
-#             # Parse the incoming JSON data
-#             data = json.loads(request.body)
-#             client_code = data.get('clientCode')
-#             password = data.get('password')
-#             new_password = data.get('newPasword', "")
-
-#             # Check if clientCode and password are provided
-#             if not password or not client_code:
-#                 return JsonResponse({"status": "error", "message": "Client code or password is missing."}, status=400)
-
-#             # API URL for verifying the password
-#             url = 'http://192.168.50.35:5000/verifyOTP'
-
-#             # Headers for the API request
-#             headers = {
-#                 'Content-Type': 'application/json',
-#                 'Cookie': f"sessionid={request.COOKIES.get('sessionid')}",
-#             }
-
-#             # Payload for the API request
-#             payload = {
-#                 "clientCode": client_code,
-#                 "password": password,
-#                 "newPasword": new_password  # You can update this if needed
-#             }
-
-#             # Make the API request using the requests library
-#             response = requests.post(url, headers=headers, json=payload)
-
-#             # Check the response status code
-#             if response.status_code == 200:
-#                 response_data = response.json()
-#                 if response_data.get("type") == "success":
-#                     # Success: Return success response
-#                     request.session['is_logged_in'] = True
-#                     return JsonResponse({"status": "success", "message": "Password successfully verified."})
-#                 else:
-#                     # API responded but with an error
-#                     return JsonResponse({"status": "error", "message": response_data.get("message", "Verification failed.")}, status=400)
-#             else:
-#                 # Handle non-200 status codes
-#                 return JsonResponse({"status": "error", "message": "Failed to verify password. API error."}, status=500)
-#         except Exception as e:
-#             # Handle exceptions such as network issues
-#             print(f"Error during API call: {e}")
-#             return JsonResponse({"status": "error", "message": "An error occurred while processing your request."}, status=500)
-
-#     # Render the password page for GET requests
-#     return render(request, 'password.html')
     
 def home_view(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -328,124 +276,158 @@ def add_watchlist(request):
             return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}"}, status=500)
     else:
         return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
-    
 
+@csrf_exempt
 def order_book_view(request):
-    api_url = 'http://192.168.50.35:5000/api/orderBook/'  # Ensure this is the correct endpoint
-    sessionid = request.COOKIES.get('sessionid')
-    client_code = request.session.get("mobile_number")  # Assuming client_code is stored in session
-    
-    # Log session details
-    print(f"Session ID: {sessionid}")
-    print(f"Client Code: {client_code}")
+    api_url = 'http://192.168.50.35:5000/api/orderBook/'
+    sessionid = request.COOKIES.get('sessionid')  # Get the session ID from cookies
 
     if not sessionid:
         return JsonResponse({'error': 'Session ID not found in cookies'}, status=400)
 
-    # Prepare headers, cookies, and payload
-    cookies = {'sessionid': sessionid}
-    headers = {'Content-Type': 'application/json'}
-    payload = {'clientCode': client_code}
+    # Parse the request body to get clientCode
+    try:
+        body = json.loads(request.body)
+        client_code = body.get("clientCode")  # Extract clientCode sent from the frontend
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON in request body'}, status=400)
+
+    if not client_code:
+        return JsonResponse({'error': 'clientCode is missing in the request'}, status=400)
+
+    # Prepare headers and payload
+    headers = {'Content-Type': 'application/json',
+               'cookies': sessionid}
+    payload = {"clientCode": client_code}
 
     try:
-        # Use POST request (adjust to GET if needed)
-        response = requests.post(api_url, cookies=cookies, json=payload, headers=headers)
-        
-        # Log the API response details
-        print(f"Response Status Code: {response.status_code}")
-        print(f"Response Text: {response.text}")
-
+        # Send the API request
+        response = requests.get(api_url, json=payload, headers=headers)
         if response.status_code == 200:
             data = response.json()
             if data.get("type") == "success":
                 return JsonResponse({'order_book': data['order_book']})
             else:
-                return JsonResponse({'error': 'Failed to fetch order book data'})
+                return JsonResponse({'error': 'Failed to fetch order book data'}, status=500)
         else:
-            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=500)
-    except requests.exceptions.RequestException as e:
+            return JsonResponse(
+                {'error': 'Error fetching data from API', 'details': response.text},
+                status=response.status_code
+            )
+    except requests.RequestException as e:
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
 
+@csrf_exempt
 def trade_book_view(request):
     api_url = 'http://192.168.50.35:5000/api/strategyTradeBook/'
-    sessionid = request.COOKIES.get('sessionid')
-    client_code = request.session.get("mobile_number")  # Assuming clientCode is stored in session
+    sessionid = request.COOKIES.get('sessionid')  # Get session ID from cookies
 
     if not sessionid:
         return JsonResponse({'error': 'Session ID not found in cookies'}, status=400)
 
-    cookies = {'sessionid': sessionid}
-    headers = {'Content-Type': 'application/json'}
-    payload = {'clientCode': client_code}
+    # Parse the request body to get clientCode
+    try:
+        body = json.loads(request.body)
+        client_code = body.get("clientCode")  # Extract clientCode sent from the frontend
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON in request body'}, status=400)
+
+    if not client_code:
+        return JsonResponse({'error': 'clientCode is missing in the request'}, status=400)
+
+    # Prepare headers and payload
+    headers = {'Content-Type': 'application/json',
+               'cookies': sessionid}
+    payload = {"clientCode": client_code}
 
     try:
-        response = requests.post(api_url, cookies=cookies, json=payload, headers=headers)
+        response = requests.get(api_url, json=payload, headers=headers)
         if response.status_code == 200:
             data = response.json()
             if data.get("type") == "success":
                 return JsonResponse({'trade_book': data['trade_book']})
             else:
-                return JsonResponse({'error': 'Failed to fetch trade book data'})
+                return JsonResponse({'error': 'Failed to fetch trade book data'}, status=500)
         else:
-            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=500)
-    except requests.exceptions.RequestException as e:
+            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=response.status_code)
+    except requests.RequestException as e:
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
     
+@csrf_exempt
 def net_position_view(request):
     api_url = 'http://192.168.50.35:5000/api/strategyNetPosition/'
-    sessionid = request.COOKIES.get('sessionid')
-    client_code = request.session.get("mobile_number")  # Assuming clientCode is stored in session
+    sessionid = request.COOKIES.get('sessionid')  # Get session ID from cookies
 
     if not sessionid:
         return JsonResponse({'error': 'Session ID not found in cookies'}, status=400)
 
-    cookies = {'sessionid': sessionid}
-    headers = {'Content-Type': 'application/json'}
-    payload = {'clientCode': client_code}
+    # Parse the request body to get clientCode
+    try:
+        body = json.loads(request.body)
+        client_code = body.get("clientCode")  # Extract clientCode sent from the frontend
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON in request body'}, status=400)
+
+    if not client_code:
+        return JsonResponse({'error': 'clientCode is missing in the request'}, status=400)
+
+    # Prepare headers and payload
+    headers = {'Content-Type': 'application/json',
+               'cookies': sessionid}
+    payload = {"clientCode": client_code}
 
     try:
-        response = requests.post(api_url, cookies=cookies, json=payload, headers=headers)
+        response = requests.get(api_url, json=payload, headers=headers)
         if response.status_code == 200:
             data = response.json()
+            print("!@#$", data)
             if data.get("type") == "success":
-                net_position = json.loads(data['net_position'])
-                return JsonResponse({'net_position': net_position})
+                return JsonResponse({'net_position': data['net_position']})
             else:
-                return JsonResponse({'error': 'Failed to fetch net position data'})
+                return JsonResponse({'error': 'Failed to fetch trade book data'}, status=500)
         else:
-            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=500)
-    except requests.exceptions.RequestException as e:
+            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=response.status_code)
+    except requests.RequestException as e:
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
 
-
+@csrf_exempt
 def strategy_net_position_view(request):
-    api_url = 'http://192.168.50.35:5000/api/strategyNetPosition/'
-    sessionid = request.COOKIES.get('sessionid')
-    client_code = request.session.get("mobile_number")  # Assuming clientCode is stored in session
+    api_url = 'http://192.168.50.35:5000/api/algoNetPosition/'
+    sessionid = request.COOKIES.get('sessionid')  # Get session ID from cookies
 
     if not sessionid:
         return JsonResponse({'error': 'Session ID not found in cookies'}, status=400)
 
-    cookies = {'sessionid': sessionid}
-    headers = {'Content-Type': 'application/json'}
-    payload = {'clientCode': client_code}
+    # Parse the request body to get clientCode
+    try:
+        body = json.loads(request.body)
+        client_code = body.get("clientCode")  # Extract clientCode sent from the frontend
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON in request body'}, status=400)
+
+    if not client_code:
+        return JsonResponse({'error': 'clientCode is missing in the request'}, status=400)
+
+    # Prepare headers and payload
+    headers = {'Content-Type': 'application/json',
+               'cookies': sessionid}
+    payload = {"clientCode": client_code}
 
     try:
-        response = requests.post(api_url, cookies=cookies, json=payload, headers=headers)
+        response = requests.get(api_url, json=payload, headers=headers)
         if response.status_code == 200:
             data = response.json()
+            print("!@#$", data)
             if data.get("type") == "success":
-                net_position = json.loads(data['net_position'])
-                return JsonResponse({'net_position': net_position})
+                return JsonResponse({'net_position': data['net_position']})
             else:
-                return JsonResponse({'error': 'Failed to fetch net position data'})
+                return JsonResponse({'error': 'Failed to fetch trade book data'}, status=500)
         else:
-            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=500)
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)  
-
+            return JsonResponse({'error': 'Error fetching data from API', 'details': response.text}, status=response.status_code)
+    except requests.RequestException as e:
+        return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
     
-TOKEN = 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
+TOKEN = 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
 
 def get_symbols(request):
     try:
@@ -529,7 +511,7 @@ def add_strategy(request):
             headers = {
                 'Accept': 'application/json, text/plain, */*',
                 'Content-Type': 'application/json',
-                'auth-token': 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
+                'auth-token': 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
             }
 
             response = requests.post(url, headers=headers, json=payload)
@@ -557,7 +539,7 @@ def strategy_watchlist(request):
         'Origin': 'http://172.16.47.87:5173',
         'Referer': 'http://172.16.47.87:5173/',
         'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
-        'auth-token': 'veN7kHTWVzPHpse2v7649JSuxtZfy9uf'
+        'auth-token': 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
     }
 
     try:

@@ -39,6 +39,6 @@ urlpatterns = [
     path('api/placeOrder/', place_order, name='place_order'),
     path('strategy-watchlist/', strategy_watchlist, name='strategy_watchlist'),
     path('get_market_depth/', get_market_depth, name='get_market_depth'),
-    path('api/watchlistAdd', add_watchlist, name='add_watchlist'),
+    path('api/add_watchlist', add_watchlist, name='add_watchlist'),
     path("ulogout/", ulogout, name='ulogout'),
 ]
