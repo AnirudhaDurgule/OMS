@@ -74,7 +74,7 @@
                                 <tbody>
                                     {% for rowData in strategyData %}
                                     <tr class="styled-row">
-                                        <td><i class="fas fa-trash-alt" style="height: 10px; width: 14px;"></i></td>
+                                        <td><i class="fas fa-trash-alt" style="height: 10px; width: 14px;" onclick="handleDelete('{{ rowData.id }}')"></i></td>
                                         <td>{{ rowData.client_id }}</td>
                                         <td>{{ rowData.portfolio }}</td>
                                         <td><a href="#">{{ rowData.underlying }}</a></td>
@@ -1177,77 +1177,6 @@
         searchTicker('NIFTY');
     });
 </script>
-<!-- <script>
-    document.getElementById("watchlistBtn").addEventListener("click", function () {
-        document.getElementById("watchlistModal").style.display = "block";
-    });
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = "none";
-    }
-
-    function addWatchlist() {
-        const clientID = document.getElementById('Client_id').value;
-        const securityName = document.getElementById('security_name').value;
-        const segment = document.getElementById('segment').value;
-        const token = document.getElementById('token').value;
-
-        const source = "web";
-        const exchange = "NSE";
-        const action = "add";
-
-        const data = {
-            clientID: clientID,
-            source: source,
-            securityName: securityName,
-            segment: segment,
-            token: token,
-            exchange: exchange,
-            action: action
-        };
-
-        fetch('http://192.168.50.35:5000/api/watchlistAdd', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Cookie': 'sessionid=ulfl5bco42ko7hfph3b5ktkhhc8ceq5m'
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                if (data.type === "success") {
-                    showToast(data.desc, 'success');
-                } else {
-                    showToast(data.desc, 'failure');
-                }
-                closeModal('watchlistModal');
-                updateWatchlistTable();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-    }
-
-    function showToast(message, type) {
-        const toastContainer = document.getElementById('toast-container');
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.textContent = message;
-
-        toastContainer.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                toastContainer.removeChild(toast);
-            }, 3000);
-        }, 100);
-    }
-</script> -->
 <script>
     const lotSizes = {
         "NIFTY": 25, "BANKNIFTY": 15, "FINNIFTY": 25, "MIDCPNIFTY": 50, "RELIANCE": 250, "TCS": 150, "INFY": 300, "HDFCBANK": 550,
@@ -1507,7 +1436,7 @@
             <td class="orderbook-table">${order.algoID}</td>
             <td class="orderbook-table">${order.ExchangeSegment}</td>
             <td class="orderbook-table">${order.InstrumentName}</td>
-            <td class="orderbook-table">${order.OrderType}</td>
+            <td class="order-side">${order.OrderType}</td>
             <td class="order-quantity">${order.OrderQuantity}</td>
             <td class="orderbook-price">${order.OrderPrice}</td>
             <td class="orderbook-table">${order.OrderStopPrice}</td>
@@ -1522,7 +1451,7 @@
             <td class="orderbook-table long-text-cell">${order.Reason}</td>
             <td class="orderbook-table">${order.ExchangeInstrumentID}</td>
             <td class="orderbook-table">${order.LastUpdateDateTime}</td>
-            <td class="order-side">${order.OrderSide}</td>
+            <td class="orderbook-table">${order.OrderSide}</td>
             <td class="orderbook-table">
                 <span class="modify-icon" onclick="enableEditRow('${order.AppOrderID}')">✎</span>
                 <span class="submit-icon" style="display: none;" onclick="submitModifiedOrder('${order.AppOrderID}')">✔</span>
@@ -2011,230 +1940,33 @@
             alert("LTP or scripcode data is not available. Please try again.");
         }
     }
-    // let ceLTPGlobal = null;
-    // let peLTPGlobal = null;
-    // let scripcodeCE = null; // Add a global variable for scripcode CE
-    // let scripcodePE = null; // Add a global variable for scripcode PE
-    // let symbols = null;
-    // let globalStrategyName = null;
 
-    // const symbolLotsize = (qty, newSelectedOption) => {
-    //     let multiplier = "";
-    //     if (newSelectedOption === "NIFTY") {
-    //         multiplier = 25;
-    //     } else if (newSelectedOption === "BANKNIFTY") {
-    //         multiplier = 15;
-    //     } else if (newSelectedOption === "FINNIFTY") {
-    //         multiplier = 25;
-    //     } else if (newSelectedOption === "MIDCPNIFTY") {
-    //         multiplier = 50;
-    //     }
-    //     return qty * multiplier;
-    // };
-    // async function buyHandleClick() {
-    //     const price = parseFloat(document.getElementById('newBuyPriceInput').value);
-    //     const qty = parseInt(document.getElementById('buyqtyInput').value, 10);  // Ensure qty is a number
-    //     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
-    //     const biddingMode = document.getElementById('biddingModeSelect').value;
-    //     const selectedSymbol = symbol;
-
-    //     if (!price || isNaN(price) || !qty || isNaN(qty) || !biddingMode || !selectedSymbol) {
-    //         alert("Please fill in all required fields with valid values.");
-    //         return;
-    //     }
-
-    //     const lot_size = symbolLotsize(qty, selectedSymbol);
-    //     console.log("lot_size", symbolLotsizes);
-    //     if (globalStrategyName === "STRADDLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
-    //         // Create an array to store both order details
-    //         const orders = [
-    //             { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-    //             { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
-    //         ];
-
-    //         try {
-    //             // Use a for loop to place each order one by one
-    //             for (let i = 0; i < orders.length; i++) {
-    //                 const order = orders[i];
-    //                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
-    //             }
-    //         } catch (error) {
-    //             console.error("Error placing orders:", error);
-    //             alert("An error occurred while placing orders.");
-    //         }
-    //     } 
-    //     else if (globalStrategyName === "ICNDBID" && ceLTPGlobal && peLTPGlobal && ceLTPGlobal2 && peLTPGlobal2 && scripcodeCE && scripcodePE && scripcodeCE2 && scripcodePE2){
-    //         const orders = [
-    //             { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-    //             { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
-    //             { optType: "CE", ltpValue: ceLTPGlobal2, qty: symbolLotsizes, scripcode: scripcodeCE2 },
-    //             { optType: "PE", ltpValue: peLTPGlobal2, qty: symbolLotsizes, scripcode: scripcodePE2 }
-    //         ];
-
-    //         try {
-    //             // Use a for loop to place each order one by one
-    //             for (let i = 0; i < orders.length; i++) {
-    //                 const order = orders[i];
-    //                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
-    //             }
-    //         } catch (error) {
-    //             console.error("Error placing orders:", error);
-    //             alert("An error occurred while placing orders.");
-    //         }
-    //     }
-    //     else if (globalStrategyName === "BUTTERFLYBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird){
-    //         const orders = [
-    //             { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-    //             { optType: optType, ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
-    //             { optType: optType, ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird }
-    //         ];
-
-    //         try {
-    //             for (let i = 0; i < orders.length; i++) {
-    //                 const order = orders[i];
-    //                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
-    //             }
-    //         } catch (error) {
-    //             console.error("Error placing orders:", error);
-    //             alert("An error occurred while placing orders.");
-    //         }
-    //     }
-    //     else {
-    //         alert("LTP or scripcode data is not available. Please try again.");
-    //     }
-    // if (ceLTPGlobal1 && peLTPGlobal1 && ceLTPGlobal2 && peLTPGlobal2 && scripcodeCE1 && scripcodePE1 && scripcodeCE2 && scripcodePE2) {
-    //     const orders = [
-    //         { optType: "CE", ltpValue: ceLTPGlobal1, qty: symbolLotsizes, scripcode: scripcodeCE1 },
-    //         { optType: "PE", ltpValue: peLTPGlobal1, qty: symbolLotsizes, scripcode: scripcodePE1 },
-    //         { optType: "CE", ltpValue: ceLTPGlobal2, qty: symbolLotsizes, scripcode: scripcodeCE2 },
-    //         { optType: "PE", ltpValue: peLTPGlobal2, qty: symbolLotsizes, scripcode: scripcodePE2 }
-    //     ];
-
-    //     try {
-    //         for (let i = 0; i < orders.length; i++) {
-    //             const order = orders[i];
-    //             await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
-    //         }
-    //         alert("All orders placed successfully!");
-    //     } catch (error) {
-    //         console.error("Error placing orders:", error);
-    //         alert("An error occurred while placing one or more orders.");
-    //     }
-    // } else {
-    //     alert("LTP or scripcode data is not available for one or more legs. Please try again.");
-    // }
-    // }
-    // async function buyHandleClick() {
-    //     const price = parseFloat(document.getElementById('newBuyPriceInput').value);
-    //     const qty = parseInt(document.getElementById('buyqtyInput').value, 10);
-    //     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
-    //     const biddingMode = document.getElementById('biddingModeSelect').value;
-    //     const selectedSymbol = symbol;
-
-    //     if (!price || !qty || !biddingMode || !selectedSymbol) {
-    //         alert("Please fill in all required fields.");
-    //         return;
-    //     }
-
-    //     // Calculate lot size based on the selected symbol and qty
-    //     const lot_size = symbolLotsize(qty, selectedSymbol);
-    //     console.log("lot_size", symbolLotsizes);
-
-    //     console.log("CE1 LTP:", ceLTPGlobal1, "PE1 LTP:", peLTPGlobal1);
-    //     console.log("CE2 LTP:", ceLTPGlobal2, "PE2 LTP:", peLTPGlobal2);
-
-    //     // Ensure that LTP and scripcode data for all legs is available
-    //     if (ceLTPGlobal1 !== null && peLTPGlobal1 !== null && ceLTPGlobal2 !== null && peLTPGlobal2 !== null &&
-    //         scripcodeCE1 !== null && scripcodePE1 !== null && scripcodeCE2 !== null && scripcodePE2 !== null) {
-
-    //         // Create an array to store the four orders (2 CE and 2 PE)
-    //         const orders = [
-    //             { optType: "CE", ltpValue: ceLTPGlobal1, qty: buyqtyInput, scripcode: scripcodeCE1 },
-    //             { optType: "PE", ltpValue: peLTPGlobal1, qty: buyqtyInput, scripcode: scripcodePE1 },
-    //             { optType: "CE", ltpValue: ceLTPGlobal2, qty: buyqtyInput, scripcode: scripcodeCE2 },
-    //             { optType: "PE", ltpValue: peLTPGlobal2, qty: buyqtyInput, scripcode: scripcodePE2 }
-    //         ];
-
-    //         console.log("Orders to be placed:", orders);
-
-    //         try {
-    //             // Iterate through all orders and place them one by one
-    //             for (let i = 0; i < orders.length; i++) {
-    //                 const order = orders[i];
-    //                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
-    //             }
-    //             alert("All orders placed successfully!");
-    //         } catch (error) {
-    //             console.error("Error placing orders:", error);
-    //             alert("An error occurred while placing one or more orders.");
-    //         }
-    //     } else {
-    //         alert("LTP or scripcode data is not available for one or more legs. Please try again.");
-    //     }
-    // }
-    // async function buyHandleClick() {
-    //     const price = document.getElementById('newBuyPriceInput').value;
-    //     const qty = document.getElementById('buyqtyInput').value; 
-    //     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
-
-    //     const biddingMode = document.getElementById('biddingModeSelect').value;
-
-    //     const selectedSymbol = symbol;
-
-    //     if (!price || !qty || !biddingMode || !selectedSymbol) {
-    //         alert("Please fill in all required fields.");
-    //         return;
-    //     }
-
-    //     // Calculate lot size based on the selected symbol and qty
-    //     const lot_size = symbolLotsize(qty, selectedSymbol);
-    //     console.log("lot_size", symbolLotsize);
-
-    //     console.log("CE LTP:", ceLTPGlobal, "PE LTP:", peLTPGlobal);
-
-    //     if (ceLTPGlobal !== null && peLTPGlobal !== null && scripcodeCE !== null && scripcodePE !== null) {
-    //         // Create an array to store both order details
-    //         const orders = [
-    //             { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-    //             { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
-    //         ];
-
-    //         console.log("orders",orders)
-    //         try {
-
-    //             for (let i = 0; i < orders.length; i++) {
-    //                 const order = orders[i];
-    //                 await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
-    //             }
-    //         } catch (error) {
-    //             console.error("Error placing orders:", error);
-    //             alert("An error occurred while placing orders.");
-    //         }
-    //     } else {
-    //         alert("LTP or scripcode data is not available. Please try again.");
-    //     }
-    // }
     async function placeOrder(optType, ltpValue, qty, scripcode) {
+    const mobileNumber = localStorage.getItem("mobile_number");
+    if (!mobileNumber) {
+        alert("Client code is missing. Please log in again.");
+        return;
+    }
+
     const tokenID = `NSEFO${scripcode}`;
-    const mobileNumber = localStorage.getItem('mobileNumber');
-    const limit = document.getElementById("newBuyPriceInput").value;
 
     const orderData = {
-        clientCode: mobileNumber,
         event: "BUY",
         productType: "NRML",
-        tokenID: tokenID,
+        tokenID: `${tokenID}`,
         action: "BUY",
-        limitPrice: parseFloat(ltpValue) === 0 ? parseFloat(limit) : parseFloat(ltpValue),
+        limitPrice: parseFloat(ltpValue),
         orderQuantity: parseInt(qty, 10),
         orderSide: "BUY",
         appOrderID: "",
         uniqueIdentifier: "",
-        stopPrice: 0,
+        stopPrice: "0",
         disclosedQuantity: "0",
         timeInForce: "DAY",
         orderType: "MARKET",
-        algoID: 499
+        IOC: "1",
+        algoID: "499",
+        clientCode: `${mobileNumber}`,
     };
 
     try {
@@ -2242,155 +1974,22 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Cookie': 'sessionid=ulfl5bco42ko7hfph3b5ktkhhc8ceq5m'
             },
-            body: JSON.stringify(orderData)
+            body: JSON.stringify(orderData) // Convert orderData to JSON
         });
 
         const data = await response.json();
-        console.log("Order Response:", data);
+
+        if (response.ok) {
+            alert(`Order placed successfully for ${optType}!`);
+        } else {
+            throw new Error(`Failed to place order: ${data.reason || 'Unknown error'}`);
+        }
     } catch (error) {
-        console.error("Order placement error:", error);
+        console.error('Error:', error);
+        alert(`Failed to place the order for ${optType}.`);
     }
 }
-//     async function placeOrder(optType, ltpValue, qty, scripcode) {
-//     const mobileNumber = localStorage.getItem("mobile_number");
-//     if (!mobileNumber) {
-//         alert("Client code is missing. Please log in again.");
-//         return;
-//     }
-
-//     const tokenID = `NSEFO${scripcode}`;
-
-//     const orderData = {
-//         event: "BUY",
-//         productType: "NRML",
-//         tokenID: `${tokenID}`,
-//         action: "BUY",
-//         limitPrice: `${parseFloat(ltpValue)}`,
-//         orderQuantity: `${parseInt(qty, 10)}`,
-//         orderSide: "BUY",
-//         appOrderID: "",
-//         uniqueIdentifier: "",
-//         stopPrice: "0",
-//         disclosedQuantity: "0",
-//         timeInForce: "DAY",
-//         orderType: "MARKET",
-//         IOC: "1",
-//         algoID: "499",
-//         clientCode: `${mobileNumber}`,
-//     };
-
-//     try {
-//         const response = await fetch('/api/placeOrder/', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify(orderData) // Convert orderData to JSON
-//         });
-
-//         const data = await response.json();
-
-//         if (response.ok) {
-//             alert(`Order placed successfully for ${optType}!`);
-//         } else {
-//             throw new Error(`Failed to place order: ${data.reason || 'Unknown error'}`);
-//         }
-//     } catch (error) {
-//         console.error('Error:', error);
-//         alert(`Failed to place the order for ${optType}.`);
-//     }
-// }
-    // async function placeOrder(optType, ltpValue, qty, scripcode) {
-    //     const mobileNumber = localStorage.getItem("mobile_number");
-    //     const tokenID = `NSEFO${scripcode}`;
-
-    //     const orderData = {
-    //         clientCode: mobileNumber,
-    //         event: "BUY",
-    //         productType: "NRML",
-    //         tokenID: tokenID,
-    //         action: "BUY",
-    //         limitPrice: parseFloat(ltpValue) || newBuyPrice,  // Ensure it's a number
-    //         orderQuantity: parseInt(qty, 10),  // Ensure it's a number
-    //         orderSide: "BUY",
-    //         appOrderID: "",
-    //         uniqueIdentifier: "",
-    //         stopPrice: 0,
-    //         disclosedQuantity: "0",
-    //         timeInForce: "DAY",
-    //         orderType: "MARKET",
-    //         IOC: 1,
-    //         algoID: 499
-    //     };
-
-    //     try {
-    //         const response = await fetch('/api/placeOrder/', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify(orderData)
-    //         });
-    //         const data = await response.json();
-
-    //         if (response.ok) {
-    //             alert(`Order placed successfully for ${optType}!`);
-    //         } else {
-    //             throw new Error(`Failed to place order: ${data.error || 'Unknown error'}`);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error:', error);
-    //         alert(`Failed to place the order for ${optType}.`);
-    //     }
-    // }
-    // // async function placeOrder(optType, ltpValue, qty, scripcode) {
-
-    //     const tokenID = `NSEFO${scripcode}`;
-
-    //     const orderData = {
-    //         event: "BUY",
-    //         productType: "NRML",
-    //         tokenID: tokenID, // Use the combined tokenID here
-    //         action: "BUY",
-    //         limitPrice: ltpValue,
-    //         orderQuantity: qty,
-    //         orderSide: "BUY",
-    //         appOrderID: "",
-    //         uniqueIdentifier: "",
-    //         stopPrice: 0,
-    //         disclosedQuantity: "0",
-    //         timeInForce: "DAY",
-    //         orderType: "MARKET",
-    //         algoID: 499
-    //     };
-
-    //     console.log(`Placing order for ${optType}:`, orderData); // Log order data
-
-    //     try {
-    //         const response = await fetch('/api/placeOrder/', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify(orderData)
-    //         });
-
-    //         const data = await response.json();
-    //         console.log('Response for order:', data); // Log response data
-
-    //         if (response.ok) {
-    //             console.log('Success:', data);
-    //             alert(`Order placed successfully for ${optType}!`);
-    //         } else {
-    //             throw new Error(`Failed to place order: ${data.error || 'Unknown error'}`);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error:', error);
-    //         alert(`Failed to place the order for ${optType}.`);
-    //     }
-    // }
     async function sellHandleClick() {
         const price = document.getElementById('newSellPriceInput').value;
         const qty = document.getElementById('sellqtyInput').value;
@@ -2430,7 +2029,7 @@
                 // Use a for loop to place each order one by one
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing orders:", error);
@@ -2447,7 +2046,7 @@
                 // Use a for loop to place each order one by one
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing orders:", error);
@@ -2492,40 +2091,6 @@
             alert("LTP or scripcode data is not available. Please try again.");
         }
     }
-    // async function sellHandleClick() {
-    //     const price = document.getElementById('newSellPriceInput').value;
-    //     const qty = document.getElementById('sellqtyInput').value;
-    //     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
-    //     const biddingMode = document.getElementById('biddingModeSelect').value;
-
-    //     if (!price || !qty || !biddingMode) {
-    //         alert("Please fill in all required fields.");
-    //         return;
-    //     }
-
-    //     console.log("CE LTP:", ceLTPGlobal, "PE LTP:", peLTPGlobal);
-
-    //     if (ceLTPGlobal !== null && peLTPGlobal !== null && scripcodeCE !== null && scripcodePE !== null) {
-    //         const orders = [
-    //             { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-    //             { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
-    //         ];
-
-    //         console.log("orders", orders);
-    //         try {
-    //             // Use a for loop to place each order one by one
-    //             for (let i = 0; i < orders.length; i++) {
-    //                 const order = orders[i];
-    //                 await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
-    //             }
-    //         } catch (error) {
-    //             console.error("Error placing sell orders:", error);
-    //             alert("An error occurred while placing sell orders.");
-    //         }
-    //     } else {
-    //         alert("LTP or scripcode data is not available. Please try again.");
-    //     }
-    // }
 
     async function placeSellOrder(optType, ltpValue, qty, scripcode) {
         const mobileNumber = localStorage.getItem("mobile_number");
@@ -2576,53 +2141,6 @@
         }
     }
 
-    // function sellHandleClick() {
-    //     const price = document.getElementById('newSellPriceInput').value;
-    //     const qty = document.getElementById('sellqtyInput').value;
-    //     const biddingMode = document.getElementById('biddingModeSelect').value;
-    //     const qtyPerCycle = document.getElementById('sellqtyPerCycleInput').value;
-    //     const symbolLotsizes = document.getElementById('lotSizeInput').value; 
-    //     // const jump = document.getElementById('jumpCheckbox').checked ? 1 : 0;
-    //     // const step = document.getElementById('stepInput').value;
-    //     // const jumpQty = document.getElementById('jumpQtyInput').value;
-
-    //     if (!price || !qty || !biddingMode) {
-    //         alert("Please fill in all required fields.");
-    //         return;
-    //     }
-
-    //     const orderData = {
-    //         event: "SELL",
-    //         productType: "NRML",
-    //         tokenID: "NSEFO35382",
-    //         action: "SELL",
-    //         limitPrice: price,
-    //         orderQuantity: qty,
-    //         orderSide: "SELL",
-    //         appOrderID: "",
-    //         uniqueIdentifier: "",
-    //         stopPrice: 0,
-    //         disclosedQuantity: "0",
-    //         timeInForce: "DAY",
-    //         orderType: "MARKET",
-    //         algoID: 499
-    //     };
-
-    //     fetch('/api/placeOrder/', {
-    //         method: 'POST',
-    //         body: JSON.stringify(orderData)  
-    //     })
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         console.log('Success:', data);
-    //         alert("Order placed successfully!");
-    //     })
-    //     .catch((error) => {
-    //         console.error('Error:', error);
-    //         alert("Failed to place the order.");
-    //     });
-    // }
-
     function submitModifiedOrder(orderID) {
         const quantity = document.getElementById(`edit-quantity-${orderID}`).value;
         const price = document.getElementById(`edit-price-${orderID}`).value;
@@ -2635,7 +2153,7 @@
 
         console.log('Submitting modified order:', modifiedOrderData);
 
-        fetch('/api/modifyOrder/', {
+        fetch('http://192.168.50.35:5000/api/modifyOrder/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2654,9 +2172,9 @@
 
                 // Show toast notification based on API response
                 if (data.type === "success") {
-                    showToast(data.desc, 'success');
+                    showToast(data.message, 'success');
                 } else {
-                    showToast(data.desc, 'failure');
+                    showToast(data.message, 'failure');
                 }
 
                 // Optionally close modal and update the watchlist table
@@ -2712,7 +2230,7 @@
 
             console.log('Sending cancel order:', cancelOrderData);
 
-            fetch('/api/cancelOrder/', {
+            fetch('http://192.168.50.35:5000/api/cancelOrder/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2730,9 +2248,9 @@
 
                     // Show toast notification based on API response
                     if (data.type === "success") {
-                        showToast(data.desc, 'success');
+                        showToast(data.message, 'success');
                     } else {
-                        showToast(data.desc, 'failure');
+                        showToast(data.message, 'failure');
                     }
 
                     // Optionally close modal and update the watchlist table
@@ -2745,7 +2263,22 @@
                 });
         }
     }
+    function showToast(message, type) {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
 
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toastContainer.removeChild(toast);
+            }, 3000);
+        }, 100);
+    }
 </script>
 <script>
     document.getElementById('instrument-input').addEventListener('input', filterTable);
@@ -2887,7 +2420,8 @@ function submitWatchlist() {
     })
         .then((response) => response.json())
         .then((data) => {
-            if (data.success) {
+            if (data.success) {            
+                showToast(data.message, 'success');
                 alert('Watchlist added successfully!');
                 closeModal('watchlistModal');
             } else {
@@ -2905,11 +2439,26 @@ function submitWatchlist() {
             console.error('Error:', error);
             alert('An unexpected error occurred.');
         });
-}
+    }
+    function showToast(message, type) {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
 
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toastContainer.removeChild(toast);
+            }, 3000);
+        }, 100);
+    }
 </script>
 <script>
-    const token = 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm';
+    const token = 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx';
 
     function loadSymbols() {
         fetch('/api/symbols/', {
@@ -3246,7 +2795,7 @@ function submitWatchlist() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'auth-token': 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
+                    'auth-token': 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx'
                 },
                 body: JSON.stringify(strategyData)
             })
@@ -3321,7 +2870,7 @@ function submitWatchlist() {
             const apiUrl = 'http://192.168.112.81:8010/v1/strategy-watchlist-gp?mode=s?mode=m';
             const headers = {
                 'Accept': 'application/json',
-                'auth-token': 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
+                'auth-token': 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx'
             };
 
             fetch(apiUrl, { headers })
@@ -3384,21 +2933,21 @@ function submitWatchlist() {
                         dataRow.setAttribute('data-strategy-id', rowData.id);
 
                         dataRow.innerHTML = `
-        <td><i class="fas fa-trash-alt" style="height: 14px; width: 14px;"></i></td>
-        <td>${rowData.client_id}</td>
-        <td>${rowData.portfolio.trim()}</td>
-        <td><a href="#">${rowData.underlying}</a></td>
-        <td>${rowData.strategy_name}</td>
-        <td>0</td> <!-- BuyQty -->
-        <td>0</td> <!-- BuyPrice -->
-        <td>0</td> <!-- SellPrice -->
-        <td>0</td> <!-- SellQty -->
-        <td>0</td> <!-- Lot Size -->
-        <td>0</td> <!-- NetQty -->
-        <td>0</td> <!-- NetShares -->
-        <td>0</td> <!-- BuyShares -->
-        <td>0</td> <!-- SellShares -->
-    `;
+                            <td><i class="fas fa-trash-alt" style="height: 14px; width: 14px;" onclick="handleDelete(${rowData.id})"></i></td>
+                            <td>${rowData.client_id}</td>
+                            <td>${rowData.portfolio.trim()}</td>
+                            <td><a href="#">${rowData.underlying}</a></td>
+                            <td>${rowData.strategy_name}</td>
+                            <td>0</td> <!-- BuyQty -->
+                            <td>0</td> <!-- BuyPrice -->
+                            <td>0</td> <!-- SellPrice -->
+                            <td>0</td> <!-- SellQty -->
+                            <td>0</td> <!-- Lot Size -->
+                            <td>0</td> <!-- NetQty -->
+                            <td>0</td> <!-- NetShares -->
+                            <td>0</td> <!-- BuyShares -->
+                            <td>0</td> <!-- SellShares -->
+                        `;
                         tableBody.appendChild(dataRow);
                     });
                 }
@@ -3408,31 +2957,6 @@ function submitWatchlist() {
                 tableBody.appendChild(noDataRow);
             }
         }
-        // Function to open Buy Modal
-        // function openBuyModalnew(buyPrice, row) {
-        //         const modal = document.getElementById('buyModalnew');
-        //         const buyPriceInput = document.getElementById('newBuyPriceInput');
-
-        //         const strategyId = row.getAttribute('data-strategy-id');
-        //         const strategyName = strategyMap[strategyId];
-        //         console.log("Strategy Name:", strategyName);
-        //         if (strategyName) {
-
-        //         const splitStrategyName = strategyName.split('_');
-        //         console.log("Split Strategy Name:", splitStrategyName[0]);
-        //         } else {
-        //         console.log("Strategy Name not found for ID:", strategyId);
-        //         }
-
-
-        //         // Set the buy price in the input field if it exists
-        //         if (buyPrice) {
-        //             buyPriceInput.value = buyPrice;
-        //         }
-
-        //         // Show the modal
-        //         modal.style.display = "block";
-        //     }
         async function openBuyModalnew(buyPrice, row) {
             const modal = document.getElementById('buyModalnew');
             const buyPriceInput = document.getElementById('newBuyPriceInput');
@@ -3869,7 +3393,7 @@ function submitWatchlist() {
         // Function to make the LTP API call
         async function fetchLTP(symbol, expiry, strike, optType) {
             const url = 'http://192.168.112.81:8010/v1/ltp';
-            const token = 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm';
+            const token = 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx';
             const requestBody = {
                 symbol: symbol,
                 expiry: expiry,
@@ -4070,38 +3594,40 @@ function submitWatchlist() {
             toggleButton.textContent = '▼'; // Update to show rows are collapsed
         }
     }
-    // function toggleRows(key, row) {
-    //     // console.log(`Toggling rows for key: ${key}`);
-    //     const rows = document.querySelectorAll(`.data-row.${key}`);
-    //     const toggleButton = row.querySelector(`#toggleButton-${key}`);
-
-    //     rows.forEach(dataRow => {
-    //         dataRow.style.display = (dataRow.style.display === 'none' || dataRow.style.display === '') ? 'table-row' : 'none';
-
-    //         // console.log('Row data:', {
-    //         //     watchlistId: dataRow.getAttribute('data-strategy-id'),
-    //         //     strategyName: dataRow.getAttribute('data-strategy-name'),
-    //         //     cells: Array.from(dataRow.cells).map(cell => cell.textContent),
-    //         //     dataRow
-    //         // });
-
-    //         if (dataRow.style.display === 'table-row') {
-    //             const watchlistId = dataRow.getAttribute('data-strategy-id');
-    //             console.log("watchlistId",watchlistId);
-    //             const message = JSON.stringify({ watchlist_id: watchlistId, msg_type: "sub", snap: false });
-    //             ws.send(message);
-
-    //         }
-    //     });
-
-    //     if (toggleButton.getAttribute('aria-expanded') === 'false') {
-    //         toggleButton.setAttribute('aria-expanded', 'true');
-    //         toggleButton.textContent = '▲';
-    //     } else {
-    //         toggleButton.setAttribute('aria-expanded', 'false');
-    //         toggleButton.textContent = '▼';
-    //     }
-    // }
 </script>
+<script>
+    async function handleDelete(rowDataId) {
+        const confirmDelete = confirm("Do you want to delete this strategy?");
+        if (confirmDelete) {
+            const deleteRowData = { watchlist_id: rowDataId };
+            const token = "MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx";  // Replace with your token logic
+    
+            try {
+                const response = await fetch("{% url 'delete_strategy' %}", {
+                    method: "DELETE",
+                    headers: {
+                        "auth-token": token,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(deleteRowData)
+                });
+    
+                const resData = await response.json();
+                if (resData.status === "success") {
+                    alert(resData.message);  // Show success message from API
+                    location.reload();  // Reload the page to refresh the table
+                } else if (response.status === "error" && response.status === 401) {
+                    alert("Token expired! Need to login again");
+                    window.location.href = "/signin";  // Redirect to login page
+                } else {
+                    alert("Error: " + resData.message);
+                }
+            } catch (error) {
+                console.error("Error deleting strategy:", error);
+                alert("An error occurred while deleting the strategy.");
+            }
+        }
+    }
+    </script>
 
 {% endblock %}

@@ -10,7 +10,7 @@ import requests
 from django.views.decorators.csrf import csrf_exempt
 
 def home(request):
-    print(request.session) 
+    print("333", request.session) 
     if not request.session.get('is_logged_in'):
         return redirect('ulogin')
 
@@ -121,6 +121,8 @@ def verify_password(request):
     return render(request, 'verify_password.html')
 
 def password(request):
+    if request.session.get('is_logged_in'):
+        return redirect("home")
     if request.method == 'POST':
         try:
             # Parse the incoming JSON data
@@ -427,7 +429,7 @@ def strategy_net_position_view(request):
     except requests.RequestException as e:
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
     
-TOKEN = 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
+TOKEN = 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx'
 
 def get_symbols(request):
     try:
@@ -511,7 +513,7 @@ def add_strategy(request):
             headers = {
                 'Accept': 'application/json, text/plain, */*',
                 'Content-Type': 'application/json',
-                'auth-token': 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
+                'auth-token': 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx'
             }
 
             response = requests.post(url, headers=headers, json=payload)
@@ -539,7 +541,7 @@ def strategy_watchlist(request):
         'Origin': 'http://172.16.47.87:5173',
         'Referer': 'http://172.16.47.87:5173/',
         'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
-        'auth-token': 'qQeNMuDPW6LfegKFBWizVlOPE4Ewypdm'
+        'auth-token': 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx'
     }
 
     try:
@@ -591,7 +593,51 @@ def cancel_order(request):
     else:
         return JsonResponse({"type": "failure", "desc": "Method not allowed."}, status=405)
 
+@csrf_exempt
+def delete_strategy(request):
+    if request.method == 'DELETE':
+        try:
+            # Extract token from headers
+            token = request.headers.get("auth-token")
+            if not token:
+                return JsonResponse({"status": "error", "message": "Token is missing"}, status=401)
+            
+            # Extract the watchlist ID from the request body
+            data = json.loads(request.body)
+            watchlist_id = data.get("watchlist_id")
+            if not watchlist_id:
+                return JsonResponse({"status": "error", "message": "watchlist_id is required"}, status=400)
 
+            # Define the external API URL
+            url = f"http://192.168.112.81:8010/v1/watchlist"
+
+            # Send DELETE request to the actual API endpoint
+            response = requests.delete(
+                url,
+                headers={
+                    "auth-token": token,
+                    "Content-Type": "application/json"
+                },
+                json={"watchlist_id": watchlist_id
+                      ,"active":False}
+            )
+
+            # Check the response from the external API
+            if response.status_code == 200:
+                return JsonResponse({"status": "success", "message": f"Strategy with id {watchlist_id} deleted successfully"})
+            elif response.status_code == 401:
+                return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
+            else:
+                # If the API response contains an error
+                return JsonResponse({"status": "error", "message": response.json().get("message", "Failed to delete strategy")}, status=response.status_code)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({"status": "error", "message": "Invalid JSON data"}, status=400)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    else:
+        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+    
 def get_ltpPrice(sym, expiry, strike, opt_type):
     url = "http://192.168.112.81:8010/v1/ltp"
 

@@ -362,7 +362,13 @@
             max-width: 100%; /* Prevent table from expanding beyond modal width */
             /* word-wrap: break-word; Handle long text wrapping */
         }
-
+        .orderbook-table thead {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1;
+    border-bottom: 1px solid #ddd;
+}
         .orderbook-table th, 
         .orderbook-table td {
             padding: 12px;
@@ -741,6 +747,7 @@
             padding: 20px;
             border-radius: 10px;
             width: 90%;
+            top:10px;
             max-width: 750px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
@@ -759,7 +766,7 @@
             margin: auto;
             border-radius: 5px;
             width: 80%;
-            top:100px;
+            top:10px;
             padding: 10px;
             max-width: none;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -844,23 +851,33 @@
         }
 
         .tabs {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 2; /* Ensure tabs appear above other content */
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
 
-        .tab-content {
-            display: none;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 0 0 5px 5px;
-            border: 1px solid #ddd;
-        }
+/* Tab content styles */
+.tab-content {
+    display: none;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 0 0 5px 5px;
+    border: 1px solid #ddd;
+    max-height: calc(80vh - 100px); /* Ensure tab content fits within modal */
+    overflow-y: auto; /* Make tab content scrollable */
+}
 
-        .tab-content.active {
-            display: block;
-        }
+/* Active tab content */
+.tab-content.active {
+    display: block;
+}
 
         .tab-container {
             display: flex;
