@@ -364,6 +364,7 @@
                             <option value="SINGLELEG">SINGLELEG</option>
                             <option value="ICNDBID">ICNDBID</option>
                             <option value="BUTTERFLYBID">BUTTERFLYBID</option>
+                            <option value="SCR">SCR</option>
                         </select>
                     </div>
                     <div class="form-field">
@@ -1406,14 +1407,24 @@
             const orderBookBody = document.getElementById('order-book-body');
 
             // Check if data was successfully fetched
-            if (data.order_book) {
+            if (data.order_book && data.order_book.length > 0) {
                 // Clear any existing content
-                orderBookBody.innerHTML = '';
+                // orderBookBody.innerHTML = '';
                 orderBookData = data.order_book;
+                currentTradeBookPage = 1; 
                 renderPaginatedOrderBook(); // Render the first page
             } else {
-                document.getElementById('order-book-body').innerHTML = '<tr><td colspan="19">No orders available</td></tr>';
+                // document.getElementById('order-book-body').innerHTML = '<tr><td colspan="19">No orders available</td></tr>';
+                orderBookBody.innerHTML = '<tr><td colspan="6">No trade book data available</td></tr>';
             }
+            // const tradeBookBody = document.getElementById('trade-book-body');
+            // if (data.trade_book && data.trade_book.length > 0) {
+            //     tradeBookData = data.trade_book;
+            //     currentTradeBookPage = 1; // Reset to the first page
+            //     renderPaginatedTradeBook(); // Render the first page
+            // } else {
+            //     tradeBookBody.innerHTML = '<tr><td colspan="6">No trade book data available</td></tr>';
+            // }
         })
         .catch(error => {
             console.error('Error fetching Order Book:', error);
@@ -1847,71 +1858,72 @@
 
         console.log("CE LTP:", ceLTPGlobal, "PE LTP:", peLTPGlobal);
 
-        if (globalStrategyName === "STRADDLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        if (globalStrategyName === "STRADDLE" && scripcodeCE && scripcodePE) {
             // Create an array to store both order details
             const orders = [
-                { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-                { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodePE }
             ];
 
             try {
                 // Use a for loop to place each order one by one
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeOrder(order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing orders:", error);
                 alert("An error occurred while placing orders.");
             }
         }
-        else if (globalStrategyName === "STRANGLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        else if (globalStrategyName === "STRANGLE" && scripcodeCE && scripcodePE) {
             // Create an array to store both order details
             const orders = [
-                { optType: "PE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-                { optType: "CE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodePE }
             ];
 
             try {
                 // Use a for loop to place each order one by one
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeOrder(order.optType, order.qty, order.scripcode);
+                    console.log("%^&", order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing orders:", error);
                 alert("An error occurred while placing orders.");
             }
         }
-        else if (globalStrategyName === "SINGLELEG" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        else if (globalStrategyName === "SINGLELEG" && scripcodeCE && scripcodePE) {
             // Create an array to store both order details
             const orders = [
-                { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: optType, qty: symbolLotsizes, scripcode: scripcodeCE },
             ];
 
             try {
                 // Use a for loop to place each order one by one
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeOrder(order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing orders:", error);
                 alert("An error occurred while placing orders.");
             }
         }
-        else if (globalStrategyName === "ICNDBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird && peLTPGlobalFourth && scripcodePEFourth) {
+        else if (globalStrategyName === "ICNDBID" && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird && peLTPGlobalFourth && scripcodePEFourth) {
             const orders = [
-                { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-                { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
-                { optType: "CE", ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird },
-                { optType: "PE", ltpValue: peLTPGlobalFourth, qty: symbolLotsizes, scripcode: scripcodePEFourth }
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodePE },
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodeCEThird },
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodePEFourth }
             ];
 
             try {
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeOrder(order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing orders:", error);
@@ -1919,17 +1931,34 @@
             }
         }
 
-        else if (globalStrategyName === "BUTTERFLYBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird) {
+        else if (globalStrategyName === "BUTTERFLYBID" && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird) {
             const orders = [
-                { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-                { optType: optType, ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
-                { optType: optType, ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird }
+                { optType: optType, qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: optType, qty: symbolLotsizes, scripcode: scripcodePE },
+                { optType: optType, qty: symbolLotsizes, scripcode: scripcodeCEThird }
             ];
 
             try {
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeOrder(order.optType, order.qty, order.scripcode);
+                }
+            } catch (error) {
+                console.error("Error placing orders:", error);
+                alert("An error occurred while placing orders.");
+            }
+        }    
+        else if (globalStrategyName === "SCR" && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird){
+            const orders = [
+                { optType: "FUT", qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodePE },
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodeCEThird }
+            ];
+
+            try {
+                for (let i = 0; i < orders.length; i++) {
+                    const order = orders[i];
+                    await placeOrder(order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing orders:", error);
@@ -1941,55 +1970,62 @@
         }
     }
 
-    async function placeOrder(optType, ltpValue, qty, scripcode) {
-    const mobileNumber = localStorage.getItem("mobile_number");
-    if (!mobileNumber) {
-        alert("Client code is missing. Please log in again.");
-        return;
-    }
-
-    const tokenID = `NSEFO${scripcode}`;
-
-    const orderData = {
-        event: "BUY",
-        productType: "NRML",
-        tokenID: `${tokenID}`,
-        action: "BUY",
-        limitPrice: parseFloat(ltpValue),
-        orderQuantity: parseInt(qty, 10),
-        orderSide: "BUY",
-        appOrderID: "",
-        uniqueIdentifier: "",
-        stopPrice: "0",
-        disclosedQuantity: "0",
-        timeInForce: "DAY",
-        orderType: "MARKET",
-        IOC: "1",
-        algoID: "499",
-        clientCode: `${mobileNumber}`,
-    };
-
-    try {
-        const response = await fetch('/api/placeOrder/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(orderData) // Convert orderData to JSON
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            alert(`Order placed successfully for ${optType}!`);
-        } else {
-            throw new Error(`Failed to place order: ${data.reason || 'Unknown error'}`);
+    async function placeOrder(optType, qty, scripcode) {
+        const mobileNumber = localStorage.getItem("mobile_number");
+        if (!mobileNumber) {
+            alert("Client code is missing. Please log in again.");
+            return;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert(`Failed to place the order for ${optType}.`);
+        const userPriceInput = document.getElementById('newBuyPriceInput').value;
+        const limitPrice = parseFloat(userPriceInput);
+
+        if (isNaN(limitPrice)) {
+            alert("Please enter a valid price.");
+            return;
+        }
+        const tokenID = `NSEFO${scripcode}`;
+
+        const orderData = {
+            event: "BUY",
+            productType: "NRML",
+            tokenID: `${tokenID}`,
+            action: "BUY",
+            // limitPrice: parseFloat(ltpValue),
+            limitPrice: limitPrice,
+            orderQuantity: parseInt(qty, 10),
+            orderSide: "BUY",
+            appOrderID: "",
+            uniqueIdentifier: "",
+            stopPrice: "0",
+            disclosedQuantity: "0",
+            timeInForce: "DAY",
+            orderType: "MARKET",
+            IOC: "1",
+            algoID: "499",
+            clientCode: `${mobileNumber}`,
+        };
+
+        try {
+            const response = await fetch('/api/placeOrder/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData) // Convert orderData to JSON
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(`Order placed successfully for ${optType}!`);
+            } else {
+                throw new Error(`Failed to place order: ${data.reason || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert(`Failed to place the order for ${optType}.`);
+        }
     }
-}
     async function sellHandleClick() {
         const price = document.getElementById('newSellPriceInput').value;
         const qty = document.getElementById('sellqtyInput').value;
@@ -2002,98 +2038,127 @@
         }
 
         // Assuming `globalStrategyName` is set according to your strategy selection logic
-        if (globalStrategyName === "STRADDLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        if (globalStrategyName === "STRADDLE" && scripcodeCE && scripcodePE) {
             const orders = [
-                { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-                { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodePE }
             ];
 
             try {
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeSellOrder(order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing sell orders:", error);
                 alert("An error occurred while placing sell orders.");
             }
         }
-        else if (globalStrategyName === "STRANGLE" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        else if (globalStrategyName === "STRANGLE" && scripcodeCE && scripcodePE) {
             // Create an array to store both order details
             const orders = [
-                { optType: "PE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-                { optType: "CE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE }
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodePE }
             ];
 
             try {
                 // Use a for loop to place each order one by one
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeSellOrder(order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing orders:", error);
                 alert("An error occurred while placing orders.");
             }
         }
-        else if (globalStrategyName === "SINGLELEG" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE) {
+        else if (globalStrategyName === "SINGLELEG" && scripcodeCE && scripcodePE) {
             // Create an array to store both order details
             const orders = [
-                { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: optType, qty: symbolLotsizes, scripcode: scripcodeCE },
             ];
 
             try {
                 // Use a for loop to place each order one by one
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeSellOrder(order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing orders:", error);
                 alert("An error occurred while placing orders.");
             }
         }
-        else if (globalStrategyName === "ICNDBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird && peLTPGlobalFourth && scripcodePEFourth) {
+        else if (globalStrategyName === "ICNDBID" && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird && peLTPGlobalFourth && scripcodePEFourth) {
             const orders = [
-                { optType: "CE", ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-                { optType: "PE", ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
-                { optType: "CE", ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird },
-                { optType: "PE", ltpValue: peLTPGlobalFourth, qty: symbolLotsizes, scripcode: scripcodePEFourth }
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodePE },
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodeCEThird },
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodePEFourth }
             ];
 
             try {
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeSellOrder(order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing sell orders:", error);
                 alert("An error occurred while placing sell orders.");
             }
         }
-        else if (globalStrategyName === "BUTTERFLYBID" && ceLTPGlobal && peLTPGlobal && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird) {
+        else if (globalStrategyName === "BUTTERFLYBID" && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird) {
             const orders = [
-                { optType: optType, ltpValue: ceLTPGlobal, qty: symbolLotsizes, scripcode: scripcodeCE },
-                { optType: optType, ltpValue: peLTPGlobal, qty: symbolLotsizes, scripcode: scripcodePE },
-                { optType: optType, ltpValue: ceLTPGlobalThird, qty: symbolLotsizes, scripcode: scripcodeCEThird }
+                { optType: optType, qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: optType, qty: symbolLotsizes, scripcode: scripcodePE },
+                { optType: optType, qty: symbolLotsizes, scripcode: scripcodeCEThird }
             ];
 
             try {
                 for (let i = 0; i < orders.length; i++) {
                     const order = orders[i];
-                    await placeSellOrder(order.optType, order.ltpValue, order.qty, order.scripcode);
+                    await placeSellOrder(order.optType, order.qty, order.scripcode);
                 }
             } catch (error) {
                 console.error("Error placing sell orders:", error);
                 alert("An error occurred while placing sell orders.");
             }
-        } else {
+        } 
+        else if (globalStrategyName === "SCR" && scripcodeCE && scripcodePE && ceLTPGlobalThird && scripcodeCEThird){
+            const orders = [
+                { optType: "FUT", qty: symbolLotsizes, scripcode: scripcodeCE },
+                { optType: "CE", qty: symbolLotsizes, scripcode: scripcodePE },
+                { optType: "PE", qty: symbolLotsizes, scripcode: scripcodeCEThird }
+            ];
+
+            try {
+                for (let i = 0; i < orders.length; i++) {
+                    const order = orders[i];
+                    await placeSellOrder(order.optType, order.qty, order.scripcode);
+                }
+            } catch (error) {
+                console.error("Error placing orders:", error);
+                alert("An error occurred while placing orders.");
+            }
+        }
+        else {
             alert("LTP or scripcode data is not available. Please try again.");
         }
     }
 
-    async function placeSellOrder(optType, ltpValue, qty, scripcode) {
+    async function placeSellOrder(optType, qty, scripcode) {
         const mobileNumber = localStorage.getItem("mobile_number");
+        if (!mobileNumber) {
+            alert("Client code is missing. Please log in again.");
+            return;
+        }
+        const userPriceInput = document.getElementById('newSellPriceInput').value;
+        const limitPrice = parseFloat(userPriceInput);
+
+        if (isNaN(limitPrice) || limitPrice <= 0) {
+            alert("Please enter a valid price.");
+            return;
+        }
         const tokenID = `NSEFO${scripcode}`;
 
         const orderData = {
@@ -2102,7 +2167,7 @@
             productType: "NRML",
             tokenID: tokenID,
             action: "SELL",
-            limitPrice: parseFloat(ltpValue),
+            limitPrice: limitPrice,
             orderQuantity: parseInt(qty, 10),
             orderSide: "SELL",
             appOrderID: "",
@@ -2458,7 +2523,7 @@ function submitWatchlist() {
     }
 </script>
 <script>
-    const token = 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx';
+    const token = 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0';
 
     function loadSymbols() {
         fetch('/api/symbols/', {
@@ -2628,14 +2693,14 @@ function submitWatchlist() {
                 };
                 console.log("Straddle inputs", strategyData);
             } else if (strategyCode === "STRANGLE") {
-                const leg1Type = "CE";
+                const leg1Type = "PE";
                 const leg1Strike = document.getElementById("strikeprice1").value || 0;
                 const leg1Quantity = document.getElementById("ratio1").value || 1;
                 const leg1ExecutionType = document.getElementById("leg1").value || "default";
                 const leg1Expiry = document.getElementById("expiry1").value || "";
 
-                const leg2Type = "PE";
-                const leg2Strike = document.getElementById("strikeprice1").value || 0;
+                const leg2Type = "CE";
+                const leg2Strike = document.getElementById("strikeprice2").value || 0;
                 const leg2Quantity = document.getElementById("ratio1").value || 1;
                 const leg2ExecutionType = document.getElementById("leg2").value || "default";
                 const leg2Expiry = document.getElementById("expiry1").value || "";
@@ -2667,6 +2732,7 @@ function submitWatchlist() {
                     active: true,
                     expiry: leg1Expiry
                 };
+                console.log("Straddle inputs", strategyData);
             }    else if (strategyCode === "SINGLELEG") {
                 const leg1Type = "CE";
                 const leg1Strike = document.getElementById("strikeprice1").value || 0;
@@ -2785,7 +2851,56 @@ function submitWatchlist() {
                     expiry: leg1Expiry
                 };
 
-            } else {
+            } 
+            else if (strategyCode === "SCR") {
+                // Handle BUTTERFLYBID strategy with dynamic option type
+                const leg1Type = "FUT";
+                const leg2Type = "CE";
+                const leg3Type = "PE";
+
+                const leg1Strike = "0";
+                const leg1Quantity = document.getElementById("ratio1").value || 1;
+                let leg1ExecutionType = document.getElementById("leg1").value || "default"; // Get leg1 execution type
+                const leg1Expiry = document.getElementById("expiry1").value || "";
+
+                const leg2Strike = document.getElementById("strikeprice1").value || 0;
+                const leg2Quantity = document.getElementById("ratio2").value || 1;
+                let leg2ExecutionType = document.getElementById("leg2").value || "default"; // Get leg2 execution type
+                const leg2Expiry = document.getElementById("expiry1").value || "";
+
+                const leg3Strike = leg1Strike;
+                const leg3Quantity = document.getElementById("ratio3").value || 1;
+                let leg3ExecutionType = document.getElementById("leg3").value || "default"; // Get leg3 execution type
+                const leg3Expiry = document.getElementById("expiry1").value || "";
+
+                // Check if any leg has "LIMIT" selected and set the other legs to "MARKET"
+                if (leg1ExecutionType === "LIMIT") {
+                    leg2ExecutionType = "MARKET";
+                    leg3ExecutionType = "MARKET";
+                } else if (leg2ExecutionType === "LIMIT") {
+                    leg1ExecutionType = "MARKET";
+                    leg3ExecutionType = "MARKET";
+                } else if (leg3ExecutionType === "LIMIT") {
+                    leg1ExecutionType = "MARKET";
+                    leg2ExecutionType = "MARKET";
+                }
+                strategyData = {
+                    portfolio,
+                    spread_type: "",
+                    client_id: clientId,
+                    underlying,
+                    strategy_code: strategyCode,
+                    bidding_mode: biddingMode,
+                    legs_info: {
+                        leg1: { type: leg1Type, strike: leg1Strike, quantity: leg1Quantity, ratio: leg1Quantity, executionType: leg1ExecutionType, expiry: leg1Expiry },
+                        leg2: { type: leg2Type, strike: leg2Strike, quantity: leg2Quantity, ratio: leg2Quantity, executionType: leg2ExecutionType, expiry: leg2Expiry },
+                        leg3: { type: leg3Type, strike: leg3Strike, quantity: leg3Quantity, ratio: leg3Quantity, executionType: leg3ExecutionType, expiry: leg3Expiry }
+                    },
+                    active: true,
+                    expiry: leg1Expiry
+                };
+            }   
+            else {
                 alert("Unsupported strategy type.");
                 return;
             }
@@ -2795,7 +2910,7 @@ function submitWatchlist() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'auth-token': 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx'
+                    'auth-token': 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0'
                 },
                 body: JSON.stringify(strategyData)
             })
@@ -2803,7 +2918,7 @@ function submitWatchlist() {
                 .then(data => {
                     if (data.message) {
                         alert('Strategy added successfully!');
-                        window.location.reload();
+                        // window.location.reload();
                     } else {
                         alert('Error: ' + (data.error || 'Unexpected error'));
 
@@ -2870,7 +2985,7 @@ function submitWatchlist() {
             const apiUrl = 'http://192.168.112.81:8010/v1/strategy-watchlist-gp?mode=s?mode=m';
             const headers = {
                 'Accept': 'application/json',
-                'auth-token': 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx'
+                'auth-token': 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0'
             };
 
             fetch(apiUrl, { headers })
@@ -3197,31 +3312,31 @@ function submitWatchlist() {
 
         //             console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
                 
-        //         }  else if (splitStrategyName[0] === 'STRANGLE') {
-        //             const symbol = splitStrategyName[1]; 
-        //             const expiry = splitStrategyName[3]; 
-        //             const strike = splitStrategyName[2];
+                // }  else if (splitStrategyName[0] === 'STRANGLE') {
+                //     const symbol = splitStrategyName[1]; 
+                //     const expiry = splitStrategyName[3]; 
+                //     const strike = splitStrategyName[2];
 
-        //             symbols = symbol
-        //             const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
-        //             const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
-
-                    
-        //             if (!ceLTPData || !peLTPData) {
-        //                 console.error("Failed to get valid LTPs for CE or PE");
-        //                 return;  
-        //             }
+                //     symbols = symbol
+                //     const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+                //     const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
 
                     
-        //             ceLTPGlobal = Math.floor(ceLTPData.LTP );
-        //             scripcodeCE = ceLTPData.scripcode; 
+                //     if (!ceLTPData || !peLTPData) {
+                //         console.error("Failed to get valid LTPs for CE or PE");
+                //         return;  
+                //     }
 
-        //             peLTPGlobal = Math.floor(peLTPData.LTP );
-        //             scripcodePE = peLTPData.scripcode;
+                    
+                //     ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                //     scripcodeCE = ceLTPData.scripcode; 
+
+                //     peLTPGlobal = Math.floor(peLTPData.LTP );
+                //     scripcodePE = peLTPData.scripcode;
                     
 
-        //             console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
-        //         } else if (splitStrategyName[0] === 'ICNDBID') {
+                //     console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
+                // } else if (splitStrategyName[0] === 'ICNDBID') {
         //             // ICNDBID_NIFTY_25100_25150_25200_25250_PE_CE_10OCT2024_CP1_LIMIT_MARKET_MARKET_MARKET
         //             const symbol = splitStrategyName[1];
         //             const expiry = splitStrategyName[8];
@@ -3393,7 +3508,7 @@ function submitWatchlist() {
         // Function to make the LTP API call
         async function fetchLTP(symbol, expiry, strike, optType) {
             const url = 'http://192.168.112.81:8010/v1/ltp';
-            const token = 'MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx';
+            const token = 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0';
             const requestBody = {
                 symbol: symbol,
                 expiry: expiry,
@@ -3476,7 +3591,31 @@ function submitWatchlist() {
                     scripcodePE = peLTPData.scripcode;
 
                     console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
+                } else if (splitStrategyName[0] === 'STRANGLE') {
+                    const symbol = splitStrategyName[1]; 
+                    const expiry = splitStrategyName[3]; 
+                    const strike = splitStrategyName[2];
 
+                    symbols = symbol
+                    const ceLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+                    const peLTPData = await fetchLTP(symbol, expiry, strike, "PE");
+
+                    
+                    if (!ceLTPData || !peLTPData) {
+                        console.error("Failed to get valid LTPs for CE or PE");
+                        return;  
+                    }
+
+                    
+                    ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                    scripcodeCE = ceLTPData.scripcode; 
+
+                    peLTPGlobal = Math.floor(peLTPData.LTP );
+                    scripcodePE = peLTPData.scripcode;
+                    
+
+                    console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", scripcodePE);
+                
                 } else if (splitStrategyName[0] === 'ICNDBID') {
                     const symbol = splitStrategyName[1];
                     const expiry = splitStrategyName[8];
@@ -3541,6 +3680,62 @@ function submitWatchlist() {
 
                     console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =", peLTPGlobal, ceLTPGlobalThird, scripcodeCEThird);
                 }
+                else if (splitStrategyName[0] === 'SINGLELEG') {
+                    const symbol = splitStrategyName[1]; 
+                    const expiry = splitStrategyName[4]; 
+                    const strike = splitStrategyName[2];
+                    const opt_type = splitStrategyName[3];
+                    optType = opt_type;
+                    symbols = symbol
+                    const ceLTPData = await fetchLTP(symbol, expiry, strike, optType);
+
+                    
+                    if (!ceLTPData) {
+                        console.error("Failed to get valid LTPs for CE or PE");
+                        return;
+                    }
+
+                    
+                    ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                    scripcodeCE = ceLTPData.scripcode;
+
+                    console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE);
+                }
+                else if(splitStrategyName[0] === 'SCR'){
+                    // BUTTERFLYBID_NIFTY_25100_25150_25200_CE_10OCT2024_CP1_LIMIT_MARKET_MARKET
+                    const symbol = splitStrategyName[1]; 
+                    const expiry = splitStrategyName[6]; 
+                    const strike = splitStrategyName[2];
+                    const strike2 = splitStrategyName[3];
+                    const strike3 = splitStrategyName[4];
+                    const opt_type = splitStrategyName[5];
+
+                    optType = opt_type;
+
+                    symbols = symbol
+                    const ceLTPData = await fetchLTP(symbol, expiry, strike, "FUT");
+                    const peLTPData = await fetchLTP(symbol, expiry, strike, "CE");
+                    const ceLTPDataThird = await fetchLTP(symbol, expiry, strike, "PE");
+
+                    
+                    if (!ceLTPData || !peLTPData || !ceLTPDataThird ) {
+                        console.error("Failed to get valid LTPs for CE or PE");
+                        return;  
+                    }
+
+                    
+                    ceLTPGlobal = Math.floor(ceLTPData.LTP );
+                    scripcodeCE = ceLTPData.scripcode; 
+
+                    peLTPGlobal = Math.floor(peLTPData.LTP );
+                    scripcodePE = peLTPData.scripcode;
+
+                    ceLTPGlobalThird = Math.floor(ceLTPDataThird.LTP );
+                    scripcodeCEThird = ceLTPDataThird.scripcode; 
+
+
+                    console.log("Global LTPs stored: CE =", ceLTPGlobal, "ScripcodeCE =", scripcodeCE, "PE =", peLTPGlobal, "ScripcodePE =");
+                }
             }
 
             modal.style.display = "block";
@@ -3600,7 +3795,7 @@ function submitWatchlist() {
         const confirmDelete = confirm("Do you want to delete this strategy?");
         if (confirmDelete) {
             const deleteRowData = { watchlist_id: rowDataId };
-            const token = "MSN5FKVNdFDWJSaZEYJ55kQmLwH1Y5hx";  // Replace with your token logic
+            const token = "I9zGGiea6jUkZJgw5sxHguF08teJOfRD";  // Replace with your token logic
     
             try {
                 const response = await fetch("{% url 'delete_strategy' %}", {
