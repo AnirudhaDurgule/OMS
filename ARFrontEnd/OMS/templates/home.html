@@ -2523,7 +2523,7 @@ function submitWatchlist() {
     }
 </script>
 <script>
-    const token = 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0';
+    const token = 'zH72WfBSEFbs8aTndJZd4TCiO0OXx8Of';
 
     function loadSymbols() {
         fetch('/api/symbols/', {
@@ -2910,7 +2910,7 @@ function submitWatchlist() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'auth-token': 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0'
+                    'auth-token': 'zH72WfBSEFbs8aTndJZd4TCiO0OXx8Of'
                 },
                 body: JSON.stringify(strategyData)
             })
@@ -2985,7 +2985,7 @@ function submitWatchlist() {
             const apiUrl = 'http://192.168.112.81:8010/v1/strategy-watchlist-gp?mode=s?mode=m';
             const headers = {
                 'Accept': 'application/json',
-                'auth-token': 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0'
+                'auth-token': 'zH72WfBSEFbs8aTndJZd4TCiO0OXx8Of'
             };
 
             fetch(apiUrl, { headers })
@@ -3508,7 +3508,7 @@ function submitWatchlist() {
         // Function to make the LTP API call
         async function fetchLTP(symbol, expiry, strike, optType) {
             const url = 'http://192.168.112.81:8010/v1/ltp';
-            const token = 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0';
+            const token = 'zH72WfBSEFbs8aTndJZd4TCiO0OXx8Of';
             const requestBody = {
                 symbol: symbol,
                 expiry: expiry,

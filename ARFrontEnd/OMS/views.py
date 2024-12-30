@@ -429,7 +429,7 @@ def strategy_net_position_view(request):
     except requests.RequestException as e:
         return JsonResponse({'error': f'API request error: {str(e)}'}, status=500)
     
-TOKEN = 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0'
+TOKEN = 'zH72WfBSEFbs8aTndJZd4TCiO0OXx8Of'
 
 def get_symbols(request):
     try:
@@ -513,7 +513,7 @@ def add_strategy(request):
             headers = {
                 'Accept': 'application/json, text/plain, */*',
                 'Content-Type': 'application/json',
-                'auth-token': 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0'
+                'auth-token': 'zH72WfBSEFbs8aTndJZd4TCiO0OXx8Of'
             }
 
             response = requests.post(url, headers=headers, json=payload)
@@ -541,7 +541,7 @@ def strategy_watchlist(request):
         'Origin': 'http://172.16.47.87:5173',
         'Referer': 'http://172.16.47.87:5173/',
         'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
-        'auth-token': 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0'
+        'auth-token': 'zH72WfBSEFbs8aTndJZd4TCiO0OXx8Of'
     }
 
     try:
@@ -649,7 +649,7 @@ def get_ltpPrice(sym, expiry, strike, opt_type):
     # })
     headers = {
     'accept': 'application/json',
-    'auth-token': 'GenVcBU6IW1zVLpNI1xeM9qvl27VJ8G0',
+    'auth-token': 'zH72WfBSEFbs8aTndJZd4TCiO0OXx8Of',
     'Content-Type': 'application/json'
     }
 
